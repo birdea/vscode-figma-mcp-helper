@@ -50,18 +50,14 @@ suite('UI Components Consolidated', () => {
         assert.strictEqual((document.getElementById('agent-select') as HTMLSelectElement).value, 'gemini');
     });
 
-    test('click handlers and auto load', (done) => {
+    test('click handlers and explicit model load', () => {
         document.getElementById('link-get-api-key')?.click();
         assert.ok(postMessageStub.calledWithMatch({ command: 'agent.getApiKeyHelp' }));
 
         const input = document.getElementById('api-key-input') as HTMLInputElement;
         input.value = '1234567890123456';
-        input.dispatchEvent(new window.Event('input'));
-        
-        setTimeout(() => {
-            assert.ok(postMessageStub.calledWithMatch({ command: 'agent.listModels' }));
-            done();
-        }, 800);
+        document.getElementById('btn-load-models')?.click();
+        assert.ok(postMessageStub.calledWithMatch({ command: 'agent.listModels', key: '1234567890123456' }));
     });
 
     test('onSaveRequested and onClearRequested', () => {

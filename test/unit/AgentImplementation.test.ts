@@ -3,6 +3,7 @@ import nock from 'nock';
 import { GeminiAgent } from '../../src/agent/GeminiAgent';
 import { ClaudeAgent } from '../../src/agent/ClaudeAgent';
 import { Logger } from '../../src/logger/Logger';
+import { PromptBuilder } from '../../src/prompt/PromptBuilder';
 
 suite('Agent Implementations', () => {
   setup(() => {
@@ -20,14 +21,14 @@ suite('Agent Implementations', () => {
       agent = new GeminiAgent();
     });
 
-    test('buildPrompt includes context', () => {
+    test('PromptBuilder includes context for agent payload', () => {
       const payload = { 
         outputFormat: 'html', 
         userPrompt: 'make it blue',
         mcpData: { component: 'Button' }
       };
-      const prompt = (agent as any).buildPrompt(payload);
-      assert.ok(prompt.includes('html'));
+      const prompt = new PromptBuilder().build(payload);
+      assert.ok(prompt.toLowerCase().includes('html'));
       assert.ok(prompt.includes('make it blue'));
       assert.ok(prompt.includes('Button'));
     });
@@ -55,13 +56,13 @@ suite('Agent Implementations', () => {
       agent = new ClaudeAgent();
     });
 
-    test('buildPrompt includes context', () => {
+    test('PromptBuilder includes context for agent payload', () => {
       const payload = { 
         outputFormat: 'tsx', 
         userPrompt: 'dark mode',
       };
-      const prompt = (agent as any).buildPrompt(payload);
-      assert.ok(prompt.includes('tsx'));
+      const prompt = new PromptBuilder().build(payload);
+      assert.ok(prompt.toLowerCase().includes('tsx'));
       assert.ok(prompt.includes('dark mode'));
     });
 

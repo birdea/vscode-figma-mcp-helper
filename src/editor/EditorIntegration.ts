@@ -1,4 +1,7 @@
 import * as vscode from 'vscode';
+import * as fs from 'fs';
+import * as os from 'os';
+import * as path from 'path';
 import { Logger } from '../logger/Logger';
 
 export class EditorIntegration {
@@ -13,9 +16,12 @@ export class EditorIntegration {
 
   async saveAsNewFile(code: string, defaultName: string = 'generated'): Promise<void> {
     const workspaceFolders = vscode.workspace.workspaceFolders;
-    const defaultUri = workspaceFolders
-      ? vscode.Uri.joinPath(workspaceFolders[0].uri, defaultName)
-      : undefined;
+    const documentsDir = path.join(os.homedir(), 'Documents');
+    const defaultUri = fs.existsSync(documentsDir)
+      ? vscode.Uri.file(path.join(documentsDir, defaultName))
+      : workspaceFolders
+        ? vscode.Uri.joinPath(workspaceFolders[0].uri, defaultName)
+        : undefined;
 
     const saveUri = await vscode.window.showSaveDialog({
       defaultUri,

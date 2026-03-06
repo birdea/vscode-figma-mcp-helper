@@ -159,4 +159,30 @@ suite('McpClient', () => {
     assert.strictEqual(success, true);
     assert.strictEqual(client.isConnected(), true);
   });
+
+  test('setEndpoint without port falls back to localhost default 3845', async () => {
+    client.setEndpoint('http://localhost');
+
+    nock('http://localhost:3845')
+      .post('/')
+      .reply(200, { jsonrpc: '2.0', id: 1, result: { protocolVersion: '2024-11-05' } });
+
+    const success = await client.initialize();
+    assert.strictEqual(success, true);
+    assert.strictEqual(client.isConnected(), true);
+  });
+
+  test('callTool accepts string JSON-RPC id', async () => {
+    nock('http://localhost:3845')
+      .post('/')
+      .reply(200, { jsonrpc: '2.0', id: 1, result: {} });
+    await client.initialize();
+
+    nock('http://localhost:3845')
+      .post('/')
+      .reply(200, { jsonrpc: '2.0', id: '2', result: { data: 'ok' } });
+
+    const result = await client.callTool('get_file', { fileId: '123' });
+    assert.deepStrictEqual(result, { data: 'ok' });
+  });
 });

@@ -1,4 +1,5 @@
 import Anthropic from '@anthropic-ai/sdk';
+import { PromptBuilder } from '../prompt/PromptBuilder';
 import { AgentType, ModelInfo, PromptPayload } from '../types';
 import { BaseAgent } from './BaseAgent';
 import { Logger } from '../logger/Logger';
@@ -51,7 +52,7 @@ export class ClaudeAgent extends BaseAgent {
       throw new Error('Claude client not initialized');
     }
 
-    const prompt = this.buildPrompt(payload);
+    const prompt = new PromptBuilder().build(payload);
     Logger.info('agent', `Generating with Claude: ${payload.model}`);
 
     try {
@@ -72,20 +73,5 @@ export class ClaudeAgent extends BaseAgent {
       Logger.error('agent', `Claude generation failed: ${(e as Error).message}`);
       throw e;
     }
-  }
-
-  private buildPrompt(payload: PromptPayload): string {
-    const lines: string[] = [];
-
-    if (payload.userPrompt) {
-      lines.push('User instruction:', payload.userPrompt, '');
-    }
-
-    if (payload.mcpData) {
-      lines.push('Figma MCP data:', JSON.stringify(payload.mcpData, null, 2), '');
-    }
-
-    lines.push(`Output format: ${payload.outputFormat}`);
-    return lines.join('\n');
   }
 }

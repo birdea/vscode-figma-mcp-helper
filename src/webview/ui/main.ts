@@ -55,6 +55,7 @@ function init() {
         else if (msg.event === 'prompt.generating') layer.onGenerating(msg.progress);
         else if (msg.event === 'prompt.chunk') layer.onChunk(msg.text);
         else if (msg.event === 'prompt.result') layer.onResult(msg.code);
+        else if (msg.event === 'prompt.estimateResult') layer.onEstimateResult(msg.tokens, msg.kb);
         else if (msg.event === 'prompt.error') layer.onError(msg.message);
         else if (msg.event === 'error' && (msg.source === 'prompt' || msg.source === 'system')) {
           layer.onHostError(msg.message);

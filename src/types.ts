@@ -54,6 +54,7 @@ export type WebviewToHostMessage =
   | { command: 'state.setAgent'; agent: AgentType }
   | { command: 'state.setModel'; model: string }
   | { command: 'prompt.generate'; payload: PromptPayload }
+  | { command: 'prompt.estimate'; payload: PromptPayload }
   | { command: 'editor.open'; code: string; language?: string }
   | { command: 'editor.saveFile'; code: string; filename: string };
 
@@ -74,6 +75,7 @@ export type HostToWebviewMessage =
   | { event: 'prompt.generating'; progress: number }
   | { event: 'prompt.chunk'; text: string }
   | { event: 'prompt.result'; code: string; format: OutputFormat }
+  | { event: 'prompt.estimateResult'; tokens: number; kb: number }
   | { event: 'prompt.error'; message: string }
   | { event: 'log.append'; entry: LogEntry }
   | { event: 'log.clear' }

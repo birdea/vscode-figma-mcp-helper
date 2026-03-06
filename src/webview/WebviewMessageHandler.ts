@@ -4,6 +4,7 @@ import { McpClient } from '../figma/McpClient';
 import { parseMcpData } from '../figma/McpParser';
 import { ScreenshotService } from '../figma/ScreenshotService';
 import { AgentFactory } from '../agent/AgentFactory';
+import { PromptBuilder } from '../prompt/PromptBuilder';
 import { EditorIntegration } from '../editor/EditorIntegration';
 import { Logger } from '../logger/Logger';
 import { CONFIG_KEYS, DEFAULT_MCP_ENDPOINT, SECRET_KEYS } from '../constants';
@@ -75,6 +76,9 @@ export class WebviewMessageHandler {
           break;
         case 'prompt.generate':
           await this.handleGenerate(msg.payload);
+          break;
+        case 'prompt.estimate':
+          await this.handleEstimate(msg.payload);
           break;
         case 'editor.open':
           await this.editorIntegration.openInEditor(msg.code, msg.language);
@@ -332,5 +336,15 @@ export class WebviewMessageHandler {
       this.post({ event: 'prompt.error', message: err.message });
       throw e;
     }
+  }
+
+  private async handleEstimate(payload: import('../types').PromptPayload) {
+    const builder = new PromptBuilder();
+    const resolvedPayload = {
+      ...payload,
+      mcpData: payload.mcpData === undefined ? WebviewMessageHandler.lastMcpData : payload.mcpData,
+    };
+    const estimate = builder.estimate(resolvedPayload);
+    this.post({ event: 'prompt.estimateResult', tokens: estimate.tokens, kb: estimate.kb });
   }
 }

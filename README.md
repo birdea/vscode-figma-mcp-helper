@@ -1,65 +1,102 @@
 # FigmaLab
 
-VS Code extension for pulling Figma MCP context into the editor and generating UI code with AI agents.
+FigmaLab is a VS Code extension prototype for turning Figma MCP context into working code inside the editor.
 
-## What It Does
+It connects to a Figma MCP server, pulls design data or screenshots, sends that context to an AI model, and lets you insert or save the generated result without leaving VS Code.
 
-- Connects to a Figma MCP server over JSON-RPC
-- Parses Figma URLs or JSON payloads into `fileId` / `nodeId`
-- Fetches Figma data and opens the JSON result in VS Code
-- Fetches screenshots and opens the image in the editor
-- Generates UI code with Gemini or Claude
-- Inserts generated code into the active editor or saves it as a new file
-- Streams operational logs into a dedicated Log view
+## Status
 
-## Current Status
+This repository is currently an experimental extension, not a finished product.
 
-Implemented today in this repository:
+What works today:
 
-- Figma MCP connect / tool listing
-- Figma data fetch
-- Figma screenshot fetch
-- Gemini model listing and code generation
-- Claude static model list and code generation
-- Prompt composition with output formats: `tsx`, `html`, `scss`, `tailwind`, `kotlin`
-- Editor insertion and save-as flow
-- Webview-based Figma / Agent / Prompt / Log panels
+- Connect to a Figma MCP endpoint over JSON-RPC
+- Parse Figma URLs or JSON payloads into `fileId` / `nodeId`
+- Fetch Figma file data and open the result as JSON in VS Code
+- Fetch screenshots and open them in the editor
+- Generate code with Gemini or Claude
+- Save generated output to a new file or insert it at the current cursor
+- View activity logs in a dedicated sidebar panel
 
-Not fully implemented or still inconsistent:
+Current gaps:
 
-- `codex` appears in some types/configuration paths, but there is no Codex agent implementation
-- `figmalab.defaultAgent` exists in settings but is not currently applied in the UI/host flow
-- The `npm test` script is broken because the referenced VS Code test runner file does not exist
+- Codex is not implemented yet
+- Some settings are declared but not fully wired into runtime behavior
+- Automated test coverage is still incomplete
 
-## Project Structure
+## Main Workflow
 
-```text
-src/
-  agent/      AI agent adapters and factory
-  editor/     VS Code editor/file integration
-  figma/      MCP client, parser, screenshot service
-  logger/     Output channel + in-memory log store
-  prompt/     Prompt construction and token estimation helpers
-  webview/    Sidebar providers, message bridge, UI
-  extension.ts
-```
+FigmaLab is organized as four sidebar views:
+
+- `Figma`: connect to MCP, paste Figma URL/JSON, fetch design data or screenshots
+- `Agent`: choose an AI provider, save an API key, and load available models
+- `Prompt`: choose output format, add instructions, generate code, insert or save the result
+- `Log`: inspect extension activity and troubleshooting details
+
+## Supported Output Formats
+
+- `tsx`
+- `html`
+- `scss`
+- `tailwind`
+- `kotlin`
+
+## Supported Agents
+
+- Gemini
+- Claude
 
 ## Requirements
 
 - Node.js 18+
 - VS Code 1.85+
 - A running Figma MCP server
-- At least one API key:
+- At least one AI API key:
   - Gemini: Google AI Studio
   - Claude: Anthropic Console
 
-## Install
+## Quick Start
+
+Install dependencies:
 
 ```bash
 npm install
 ```
 
-## Development
+Build the extension:
+
+```bash
+npm run build
+```
+
+Launch it in VS Code:
+
+1. Open this repository in VS Code
+2. Run the `Run Extension` launch configuration
+3. In the Extension Development Host, open the `FigmaLab` activity bar view
+
+Use the extension:
+
+1. Connect the `Figma` panel to your MCP endpoint
+2. Paste a Figma URL or MCP JSON payload
+3. Fetch data or a screenshot
+4. Open the `Agent` panel and save an API key
+5. Load a model
+6. Open the `Prompt` panel and choose an output format
+7. Generate code
+8. Insert it into the active editor or save it as a file
+
+## Configuration
+
+Available extension settings:
+
+- `figmalab.mcpEndpoint`
+  - Default: `http://localhost:3845`
+  - Figma MCP server endpoint
+- `figmalab.defaultAgent`
+  - Declared in configuration, but not fully applied across the current runtime flow
+
+## Local Development
 
 Build once:
 
@@ -79,7 +116,7 @@ Lint:
 npm run lint
 ```
 
-Package extension:
+Package the extension:
 
 ```bash
 npm run package
@@ -87,7 +124,9 @@ npm run package
 
 ## Mock MCP Server
 
-The repository includes a local mock server for UI development:
+The repository includes a simple mock server for local UI development.
+
+Start it with:
 
 ```bash
 node mock-mcp-server.js
@@ -99,40 +138,28 @@ Default endpoint:
 http://localhost:3845
 ```
 
-The mock server supports:
+Implemented mock methods:
 
 - `initialize`
 - `tools/list`
 - `tools/call` for `get_file`
 - `tools/call` for `get_image`
 
-## How To Use
+## Project Structure
 
-1. Build the extension with `npm run build`
-2. Launch the extension in VS Code Extension Development Host
-3. Open the `FigmaLab` activity bar container
-4. In the `Figma` view, connect to your MCP endpoint
-5. Paste a Figma URL or JSON payload
-6. Fetch data or screenshot
-7. In the `Agent` view, save an API key and load a model
-8. In the `Prompt` view, choose an output format and generate code
-9. Insert the result into the current file or save it as a new file
+```text
+src/
+  agent/      AI provider adapters and factory
+  editor/     Editor insertion and file save integration
+  figma/      MCP client, parser, and screenshot service
+  logger/     Output channel and in-memory log store
+  prompt/     Prompt building and token estimation helpers
+  webview/    Sidebar providers, message handling, and UI
+  extension.ts
+```
 
-## Configuration
+## Notes
 
-Available settings from `package.json`:
-
-- `figmalab.mcpEndpoint`: MCP endpoint, default `http://localhost:3845`
-- `figmalab.defaultAgent`: declared setting, but not wired into runtime behavior yet
-
-## Verification
-
-Verified locally:
-
-- `npm run build`
-- `npm run lint`
-
-Not passing:
-
-- `npm test`
-  - Fails because `out/test/runTest.js` is missing from the repository
+- This project is currently optimized for local experimentation and extension development.
+- If you are evaluating the codebase, start with `src/extension.ts` and `src/webview/WebviewMessageHandler.ts`.
+- For a deeper assessment of architecture, UX, bugs, and technical debt, see `CODE_REVIEW.md`.

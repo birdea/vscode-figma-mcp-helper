@@ -6,21 +6,21 @@ export class FigmaLayer {
   render(): string {
     return `
 <div class="panel">
-  <div class="panel-title">MCP Connection</div>
-  <div class="status-row" id="figma-status-row">
-    <span class="status-dot" id="figma-status-dot"></span>
-    <span id="figma-status-text" class="status-text">연결되지 않음</span>
+  <div class="meta-row">
+    <div class="meta-title">MCP Connect</div>
+    <div class="status-row meta-subtitle" id="figma-status-row">
+      <span class="status-dot" id="figma-status-dot"></span>
+      <span id="figma-status-text" class="status-text">연결되지 않음</span>
+    </div>
   </div>
   <div class="tool-list hidden" id="figma-tool-list" style="margin-top: 8px;"></div>
-  <div class="row" style="margin-top: 8px;">
-    <button class="primary" id="btn-connect"><i class="codicon codicon-plug"></i>Connect</button>
-  </div>
-  <div class="description-text" style="margin-top: 6px;">고정된 MCP 서버(localhost:3845)에 연결하면 데이터 조회와 스크린샷 기능이 활성화됩니다.</div>
 </div>
 <div class="panel">
-  <div class="panel-title">Figma Source</div>
+  <div class="meta-row">
+    <div class="meta-title">Source</div>
+    <span class="meta-subtitle" title="MCP 데이터 입력 (URL 또는 JSON)">MCP 데이터 입력 (URL 또는 JSON)</span>
+  </div>
   <div class="field-group">
-    <label for="mcp-data">MCP 데이터 입력 (URL 또는 JSON)</label>
     <textarea id="mcp-data" placeholder="https://figma.com/file/... 또는 JSON"></textarea>
   </div>
   <div class="btn-row" style="margin-top: 8px;">
@@ -38,11 +38,6 @@ export class FigmaLayer {
     const dataInput = document.getElementById('mcp-data') as HTMLTextAreaElement | null;
 
     dataInput?.addEventListener('input', () => this.updateActionState());
-
-    document.getElementById('btn-connect')?.addEventListener('click', () => {
-      this.setNotice('info', 'MCP 서버 연결을 시도하고 있습니다...');
-      vscode.postMessage({ command: 'figma.connect' });
-    });
 
     document.getElementById('btn-fetch')?.addEventListener('click', () => {
       const mcpData = dataInput?.value.trim() ?? '';
@@ -69,6 +64,10 @@ export class FigmaLayer {
     });
 
     this.updateActionState();
+  }
+
+  requestConnect() {
+    vscode.postMessage({ command: 'figma.connect' });
   }
 
   onStatus(connected: boolean, methods: string[], error?: string) {

@@ -38,13 +38,13 @@ export class PromptLayer {
   </div>
   <div class="notice hidden" id="prompt-notice" style="margin-top: 8px;"></div>
 </div>
+<div class="btn-row" id="code-actions" style="display:none;">
+  <button class="primary" id="btn-open-editor"><i class="codicon codicon-go-to-file"></i>에디터에서 열기</button>
+  <button class="secondary" id="btn-save-file"><i class="codicon codicon-save"></i>파일로 저장</button>
+</div>
 <div class="panel">
   <div class="panel-title">Generated Code</div>
   <pre class="code-output" id="code-output"></pre>
-  <div class="btn-row" id="code-actions" style="display:none; margin-top: 8px;">
-    <button class="primary" id="btn-open-editor"><i class="codicon codicon-go-to-file"></i>에디터에서 열기</button>
-    <button class="secondary" id="btn-save-file"><i class="codicon codicon-save"></i>파일로 저장</button>
-  </div>
 </div>
 `;
   }

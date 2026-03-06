@@ -11,7 +11,7 @@ interface JsonRpcRequest {
 
 interface JsonRpcResponse {
   jsonrpc: '2.0';
-  id: number;
+  id: number | string | null;
   result?: unknown;
   error?: { code: number; message: string; data?: unknown };
 }
@@ -38,10 +38,19 @@ export class McpClient {
       }
       const isHttps = url.protocol === 'https:';
       const requestModule = isHttps ? https : http;
+      const isLocalhost = url.hostname === 'localhost' || url.hostname === '127.0.0.1';
+      const resolvedPort =
+        url.port && url.port.trim()
+          ? Number(url.port)
+          : isHttps
+            ? 443
+            : isLocalhost
+              ? 3845
+              : 80;
 
       const options: http.RequestOptions = {
         hostname: url.hostname,
-        port: url.port ? Number(url.port) : undefined,
+        port: resolvedPort,
         path: `${url.pathname || '/'}${url.search || ''}`,
         method: 'POST',
         headers: {
@@ -65,7 +74,7 @@ export class McpClient {
               reject(new Error(`Invalid MCP JSON-RPC version: ${String(response.jsonrpc)}`));
               return;
             }
-            if (response.id !== id) {
+            if (response.id !== null && response.id !== undefined && String(response.id) !== String(id)) {
               reject(new Error(`MCP response id mismatch: expected ${id}, got ${response.id}`));
               return;
             }

@@ -1,4 +1,6 @@
 import * as assert from 'assert';
+import * as os from 'os';
+import * as path from 'path';
 import * as sinon from 'sinon';
 import { EditorIntegration } from '../../src/editor/EditorIntegration';
 
@@ -19,9 +21,14 @@ suite('EditorIntegration', () => {
 
   test('saveAsNewFile calls showInformationMessage', async () => {
     const vscode = require('vscode');
+    const saveDialogStub = vscode.window.showSaveDialog;
     vscode.window.showSaveDialog.resolves({ fsPath: '/test/path.ts' });
     
     await integration.saveAsNewFile('code', 'test.ts');
+    const saveArgs = saveDialogStub.firstCall.args[0];
+    if (saveArgs.defaultUri?.fsPath) {
+      assert.strictEqual(saveArgs.defaultUri.fsPath, path.join(os.homedir(), 'Documents', 'test.ts'));
+    }
     assert.ok(vscode.window.showInformationMessage.called);
   });
 });

@@ -2,7 +2,7 @@ import * as vscode from 'vscode';
 import * as crypto from 'crypto';
 import { WebviewMessageHandler } from './WebviewMessageHandler';
 import { Logger } from '../logger/Logger';
-import { DEFAULT_MCP_ENDPOINT } from '../constants';
+import { DEFAULT_MCP_ENDPOINT, CONFIG_KEYS } from '../constants';
 import { WebviewToHostMessage } from '../types';
 
 export class SidebarProvider implements vscode.WebviewViewProvider {
@@ -32,14 +32,19 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
       ],
     };
 
+    const config = vscode.workspace.getConfiguration();
+    const mcpEndpoint = config.get<string>(CONFIG_KEYS.MCP_ENDPOINT) || DEFAULT_MCP_ENDPOINT;
+
     this.handler = new WebviewMessageHandler(
       webviewView.webview,
       this.context,
-      DEFAULT_MCP_ENDPOINT,
+      mcpEndpoint,
     );
 
     if (this.onLog) {
       Logger.onLog(this.onLog);
+      const entries = Logger.getEntries();
+      entries.forEach((entry) => this.onLog?.(entry));
     }
 
     webviewView.webview.html = this.getHtml(webviewView.webview);

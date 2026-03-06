@@ -98,22 +98,33 @@ export class WebviewMessageHandler {
   }
 
   private async handleFigmaConnect() {
-    this.mcpClient.setEndpoint(DEFAULT_MCP_ENDPOINT);
+    const config = vscode.workspace.getConfiguration();
+    const endpoint = config.get<string>(CONFIG_KEYS.MCP_ENDPOINT) || DEFAULT_MCP_ENDPOINT;
+    this.mcpClient.setEndpoint(endpoint);
     try {
       const connected = await this.mcpClient.initialize();
       const methods = connected ? await this.mcpClient.listTools() : [];
+      
+      if (!connected) {
+        Logger.error('figma', `Failed to connect to MCP server at ${endpoint}`);
+      } else {
+        Logger.success('figma', `Connected to MCP server at ${endpoint}`);
+      }
+
       this.post({
         event: 'figma.status',
         connected,
         methods,
-        error: connected ? undefined : 'Connection failed. Is the server running?',
+        error: connected ? undefined : `Connection failed. Please ensure the MCP server is running at ${endpoint}.`,
       });
     } catch (e) {
+      const errMessage = (e as Error).message;
+      Logger.error('figma', `MCP connection error at ${endpoint}: ${errMessage}`);
       this.post({
         event: 'figma.status',
         connected: false,
         methods: [],
-        error: (e as Error).message,
+        error: `Connection error: ${errMessage}`,
       });
     }
   }

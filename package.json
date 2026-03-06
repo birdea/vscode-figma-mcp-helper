@@ -144,7 +144,7 @@
         "figmalab.mcpEndpoint": {
           "type": "string",
           "default": "http://localhost:3845",
-          "description": "Figma MCP server endpoint (http only for Desktop)"
+          "description": "Figma MCP server endpoint"
         }
       }
     }

@@ -27,16 +27,27 @@ const mockVscode = {
     showErrorMessage: sinon.stub(),
     showTextDocument: sinon.stub(),
     createWebviewPanel: sinon.stub(),
+    showSaveDialog: sinon.stub(),
+    createOutputChannel: sinon.stub(),
+    registerWebviewViewProvider: sinon.stub(),
   },
   workspace: {
     getConfiguration: sinon.stub().returns({
       get: sinon.stub(),
     }),
     openTextDocument: sinon.stub(),
+    fs: {
+      writeFile: sinon.stub(),
+    },
   },
   Uri: {
     parse: sinon.stub().returns({}),
     file: sinon.stub().returns({}),
+    joinPath: sinon.stub().returns({}),
+  },
+  commands: {
+    registerCommand: sinon.stub().returns({ dispose: sinon.stub() }),
+    executeCommand: sinon.stub().returns({}),
   },
   env: {
     openExternal: sinon.stub(),
@@ -51,7 +62,10 @@ const mockVscode = {
   }
 };
 
-// This is a trick to mock 'vscode' which is usually provided by the host
-// Since we are in a unit test environment, we can use a custom loader or just ensure it's in require.cache
-// But with 'tsx', we might need to use 'mock-require' or similar if it's imported as ESM.
-// For now, I'll rely on the fact that I'm mocking the globals that the extension uses.
+// Intercept require('vscode') for tests
+const m = require('module');
+const originalRequire = m.prototype.require;
+m.prototype.require = function(path: string) {
+  if (path === 'vscode') return mockVscode;
+  return originalRequire.apply(this, arguments);
+};

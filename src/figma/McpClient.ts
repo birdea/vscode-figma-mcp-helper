@@ -1,4 +1,5 @@
 import * as http from 'http';
+import * as https from 'https';
 import { Logger } from '../logger/Logger';
 
 interface JsonRpcRequest {
@@ -31,9 +32,12 @@ export class McpClient {
 
     return new Promise((resolve, reject) => {
       const url = new URL(this.endpoint);
+      const isHttps = url.protocol === 'https:';
+      const requestModule = isHttps ? https : http;
+      
       const options: http.RequestOptions = {
         hostname: url.hostname,
-        port: url.port || 3845,
+        port: url.port || (isHttps ? 443 : 3845),
         path: url.pathname || '/',
         method: 'POST',
         headers: {
@@ -42,7 +46,7 @@ export class McpClient {
         },
       };
 
-      const req = http.request(options, (res) => {
+      const req = requestModule.request(options, (res) => {
         let data = '';
         res.on('data', (chunk) => (data += chunk));
         res.on('end', () => {

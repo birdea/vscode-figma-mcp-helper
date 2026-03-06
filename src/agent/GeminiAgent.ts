@@ -1,4 +1,5 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
+import { PromptBuilder } from '../prompt/PromptBuilder';
 import { AgentType, ModelInfo, PromptPayload } from '../types';
 import { BaseAgent } from './BaseAgent';
 import { Logger } from '../logger/Logger';
@@ -82,7 +83,7 @@ export class GeminiAgent extends BaseAgent {
     }
 
     const model = this.client.getGenerativeModel({ model: payload.model || 'gemini-2.0-flash' });
-    const prompt = this.buildPrompt(payload);
+    const prompt = new PromptBuilder().build(payload);
 
     Logger.info('agent', `Generating with Gemini: ${payload.model}`);
 
@@ -99,24 +100,5 @@ export class GeminiAgent extends BaseAgent {
       Logger.error('agent', `Gemini generation failed: ${(e as Error).message}`);
       throw e;
     }
-  }
-
-  private buildPrompt(payload: PromptPayload): string {
-    const lines: string[] = [
-      `You are an expert UI developer. Based on the provided Figma design data, generate ${payload.outputFormat} code that faithfully reproduces the layout.`,
-      'Output ONLY valid code. No explanation.',
-      '',
-    ];
-
-    if (payload.userPrompt) {
-      lines.push('User instruction:', payload.userPrompt, '');
-    }
-
-    if (payload.mcpData) {
-      lines.push('Figma MCP data:', JSON.stringify(payload.mcpData, null, 2), '');
-    }
-
-    lines.push(`Output format: ${payload.outputFormat}`);
-    return lines.join('\n');
   }
 }

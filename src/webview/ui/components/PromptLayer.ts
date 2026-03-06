@@ -136,18 +136,29 @@ export class PromptLayer {
       const useUserPromptEl = document.getElementById('use-user-prompt') as HTMLInputElement | null;
       const useMcpDataEl = document.getElementById('use-mcp-data') as HTMLInputElement | null;
       const userPromptEl = document.getElementById('user-prompt') as HTMLTextAreaElement | null;
+      const outputFormatEl = document.getElementById('output-format') as HTMLSelectElement | null;
       const estimateEl = document.getElementById('token-estimate');
 
-      if (!useUserPromptEl || !useMcpDataEl || !userPromptEl || !estimateEl) return;
+      if (!useUserPromptEl || !useMcpDataEl || !userPromptEl || !outputFormatEl || !estimateEl) return;
 
-      const useUserPrompt = useUserPromptEl.checked;
-      const useMcpData = useMcpDataEl.checked;
-      const userPrompt = useUserPrompt ? userPromptEl.value : '';
-      const bytes = new TextEncoder().encode(userPrompt).length;
-      const kb = (bytes / 1024).toFixed(1);
-      const tokens = Math.ceil(userPrompt.length / 4).toLocaleString();
-      estimateEl.textContent = `${kb}KB / ~${tokens} tok${useMcpData ? ' + MCP' : ''}`;
+      estimateEl.textContent = 'Estimating...';
+
+      const payload: PromptPayload = {
+        userPrompt: useUserPromptEl.checked ? userPromptEl.value.trim() : undefined,
+        mcpData: useMcpDataEl.checked ? undefined : null,
+        outputFormat: outputFormatEl.value as OutputFormat,
+      };
+
+      vscode.postMessage({ command: 'prompt.estimate', payload });
     }, 300);
+  }
+
+  onEstimateResult(tokens: number, kb: number) {
+    const estimateEl = document.getElementById('token-estimate');
+    if (!estimateEl) return;
+    const kbStr = kb.toFixed(1);
+    const tokStr = tokens.toLocaleString();
+    estimateEl.textContent = `${kbStr}KB / ~${tokStr} tok`;
   }
 
   onGenerating(progress: number) {

@@ -228,7 +228,7 @@
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.20.0",
-    "@google/generative-ai": "^0.3.0",
+    "@google/generative-ai": "^0.24.1",
     "@vscode/codicons": "^0.0.44"
   },
   "overrides": {

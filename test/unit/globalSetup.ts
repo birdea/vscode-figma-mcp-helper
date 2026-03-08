@@ -7,6 +7,8 @@ const dom = new JSDOM('<!DOCTYPE html><html><body><div id="app"></div></body></h
 });
 (global as any).window = dom.window;
 (global as any).document = dom.window.document;
+(global as any).document.documentElement.lang = 'ko';
+(global as any).document.body.dataset.locale = 'ko';
 (global as any).navigator = dom.window.navigator;
 (global as any).Node = dom.window.Node;
 (global as any).HTMLElement = dom.window.HTMLElement;
@@ -38,6 +40,7 @@ const mockVscode = {
     openTextDocument: sinon.stub(),
     fs: {
       writeFile: sinon.stub(),
+      delete: sinon.stub(),
     },
   },
   Uri: {
@@ -50,6 +53,10 @@ const mockVscode = {
     executeCommand: sinon.stub().returns({}),
   },
   env: {
+    language: 'ko',
+    clipboard: {
+      writeText: sinon.stub().resolves(),
+    },
     openExternal: sinon.stub(),
   },
   ViewColumn: {

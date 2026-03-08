@@ -5,7 +5,7 @@ import * as MainModule from '../../src/webview/ui/main';
 suite('UI Main Initialization', () => {
     let dom: JSDOM;
 
-    const sections = ['figma', 'agent', 'prompt', 'log'];
+    const sections = ['setup', 'prompt', 'log'];
 
     function setupDom(section: string) {
         dom = new JSDOM(`<!DOCTYPE html><html><body data-section="${section}"><div id="app"></div></body></html>`, {
@@ -28,12 +28,15 @@ suite('UI Main Initialization', () => {
             MainModule.init();
             const app = dom.window.document.getElementById('app');
             assert.ok(app?.innerHTML.length > 0, `Should render layer for ${section}`);
-            dispatch({ event: `${section}.status`, connected: true, methods: [] });
+            if (section === 'setup') {
+                dispatch({ event: 'figma.status', connected: true, methods: [] });
+                dispatch({ event: 'agent.state', agent: 'gemini', model: '', hasApiKey: false });
+            }
         });
     });
 
-    test('figma section — all message branches', () => {
-        setupDom('figma');
+    test('setup section — all message branches', () => {
+        setupDom('setup');
         MainModule.init();
 
         dispatch({ event: 'figma.connectRequested' });
@@ -43,21 +46,6 @@ suite('UI Main Initialization', () => {
         dispatch({ event: 'figma.screenshotResult', base64: 'aGVsbG8=' });
         dispatch({ event: 'error', source: 'figma', message: 'figma error' });
         dispatch({ event: 'unknown.event' }); // no-op branch
-    });
-
-    test('agent section — all message branches', () => {
-        setupDom('agent');
-        MainModule.init();
-
-        dispatch({ event: 'agent.modelsResult', models: [] });
-        dispatch({ event: 'agent.saveRequested' });
-        dispatch({ event: 'agent.clearRequested' });
-        dispatch({ event: 'agent.state', agent: 'gemini', model: '', hasApiKey: false });
-        dispatch({ event: 'agent.settingsSaved', agent: 'gemini', model: '', hasApiKey: false });
-        dispatch({ event: 'agent.settingsCleared', agent: 'gemini' });
-        dispatch({ event: 'error', source: 'agent', message: 'agent error' });
-        dispatch({ event: 'error', source: 'system', message: 'system error' });
-        dispatch({ event: 'unknown.event' });
     });
 
     test('prompt section — all message branches', () => {
@@ -85,7 +73,7 @@ suite('UI Main Initialization', () => {
     });
 
     test('DOMContentLoaded listener', () => {
-        dom = new JSDOM(`<!DOCTYPE html><html><body data-section="figma"><div id="app"></div></body></html>`, {
+        dom = new JSDOM(`<!DOCTYPE html><html><body data-section="setup"><div id="app"></div></body></html>`, {
             url: 'http://localhost',
         });
         Object.defineProperty(dom.window.document, 'readyState', { get: () => 'loading' });

@@ -44,4 +44,16 @@ suite('McpParser Final', () => {
   test('Empty', () => {
     assert.strictEqual(parseMcpData('').fileId, '');
   });
+
+  test('Malformed node-id encoding does not throw', () => {
+    const res = parseMcpData('https://figma.com/file/F8/T?node-id=%E0%A4%A');
+    assert.strictEqual(res.fileId, 'F8');
+    assert.strictEqual(res.nodeId, 'E0A4A');
+  });
+
+  test('Overlong JSON fileId is rejected', () => {
+    const overlong = 'a'.repeat(129);
+    const res = parseMcpData(`{"fileId":"${overlong}"}`);
+    assert.strictEqual(res.fileId, '');
+  });
 });

@@ -115,7 +115,7 @@ export class FigmaCommandHandler {
     }
     try {
       const base64 = await this.screenshotService.fetchScreenshot(parsed.fileId, parsed.nodeId);
-      await this.screenshotService.openInEditor(base64, parsed.fileId);
+      await this.screenshotService.openInEditor(base64, parsed.fileId, parsed.nodeId);
       this.post({ event: 'figma.screenshotResult', base64 });
     } catch {
       this.post({

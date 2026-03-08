@@ -30,6 +30,7 @@ suite('WebviewMessageHandler Comprehensive', () => {
       'http://localhost:3845',
       stateManager,
       '1.0.0',
+      'ko',
     );
     Logger.initialize({ appendLine: () => {}, clear: () => {} } as any);
   });

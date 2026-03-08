@@ -77,7 +77,7 @@ suite('UI Components Consolidated', () => {
     test('onState with hasApiKey=false shows prompt notice', () => {
         layer.onState('gemini', '', false);
         const notice = document.getElementById('agent-notice');
-        assert.ok(notice?.textContent?.includes('API Key'));
+        assert.ok(notice?.textContent?.includes('API 키'));
     });
 
     test('agent-select change event fires state.setAgent', () => {
@@ -159,18 +159,19 @@ suite('UI Components Consolidated', () => {
     test('onStatus handles methods and error', () => {
       layer.onStatus(true, ['tool1', 'tool2'], undefined);
       const text = document.getElementById('figma-status-text');
-      assert.ok(text?.textContent?.includes('2개'));
-      assert.ok(document.getElementById('figma-tool-list')?.innerHTML.includes('tool1'));
+      const guide = document.getElementById('figma-guide');
+      assert.ok(text?.textContent?.includes('연결'));
+      assert.ok(guide?.textContent?.includes('2개'));
 
       layer.onStatus(false, [], 'Connect error');
       const notice = document.getElementById('figma-notice');
       assert.ok(notice?.textContent?.includes('Connect error'));
     });
 
-    test('onStatus disconnected without error shows warn', () => {
+    test('onStatus disconnected without error clears notice', () => {
       layer.onStatus(false, [], undefined);
       const notice = document.getElementById('figma-notice');
-      assert.ok(notice?.textContent?.includes('연결되지'));
+      assert.strictEqual(notice?.textContent, '');
     });
 
     test('screenshot button click when not connected shows warn', () => {
@@ -464,7 +465,7 @@ suite('UI Components Consolidated', () => {
 suite('UI Main Initialization', () => {
     setup(() => {
         document.body.innerHTML = '<div id="app"></div>';
-        document.body.dataset.section = 'figma';
+        document.body.dataset.section = 'setup';
         // Clear cache for main.ts to re-run init()
         delete require.cache[require.resolve('../../src/webview/ui/main')];
     });

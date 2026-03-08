@@ -2,9 +2,9 @@
 
 Convert Figma designs into code directly inside VS Code.
 
-Paste a Figma URL, pick an AI model (Gemini or Claude), and generate production-ready code — without leaving your editor.
+Paste a Figma URL, pick an AI model (Gemini or Claude), and generate implementation-ready code without leaving your editor.
 
-> This is an experimental prototype. Core features work, but some rough edges remain.
+> Current status: preview release. Core workflows are stable enough for regular use, but the extension is still evolving.
 
 ## Requirements
 

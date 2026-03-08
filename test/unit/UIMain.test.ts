@@ -1,6 +1,7 @@
 import * as assert from 'assert';
 import { JSDOM } from 'jsdom';
 import * as MainModule from '../../src/webview/ui/main';
+import { installDom } from './helpers/dom';
 
 suite('UI Main Initialization', () => {
   let dom: JSDOM;
@@ -8,21 +9,7 @@ suite('UI Main Initialization', () => {
   const sections = ['setup', 'prompt', 'log'];
 
   function setupDom(section: string) {
-    dom = new JSDOM(
-      `<!DOCTYPE html><html><body data-section="${section}"><div id="app"></div></body></html>`,
-      {
-        url: 'http://localhost',
-      },
-    );
-    (global as any).window = dom.window;
-    (global as any).document = dom.window.document;
-    (global as any).navigator = dom.window.navigator;
-    (global as any).acquireVsCodeApi = () => ({
-      postMessage: () => {},
-      getState: () => ({}),
-      setState: () => {},
-    });
-    (dom.window as any).acquireVsCodeApi = (global as any).acquireVsCodeApi;
+    dom = installDom(section).dom;
   }
 
   function dispatch(data: object) {
@@ -82,21 +69,7 @@ suite('UI Main Initialization', () => {
   });
 
   test('DOMContentLoaded listener', () => {
-    dom = new JSDOM(
-      `<!DOCTYPE html><html><body data-section="setup"><div id="app"></div></body></html>`,
-      {
-        url: 'http://localhost',
-      },
-    );
-    Object.defineProperty(dom.window.document, 'readyState', { get: () => 'loading' });
-    (global as any).window = dom.window;
-    (global as any).document = dom.window.document;
-    (global as any).acquireVsCodeApi = () => ({
-      postMessage: () => {},
-      getState: () => ({}),
-      setState: () => {},
-    });
-    (dom.window as any).acquireVsCodeApi = (global as any).acquireVsCodeApi;
+    dom = installDom('setup', { readyState: 'loading' }).dom;
 
     // When readyState is 'loading', main.ts adds a DOMContentLoaded listener.
     // We simulate this by calling init() after DOMContentLoaded fires.

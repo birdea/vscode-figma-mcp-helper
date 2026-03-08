@@ -4,11 +4,22 @@ import { WebviewMessageHandler } from '../../src/webview/WebviewMessageHandler';
 import { AgentFactory } from '../../src/agent/AgentFactory';
 import { Logger } from '../../src/logger/Logger';
 import { StateManager } from '../../src/state/StateManager';
+import { createAgentStub } from './helpers/agents';
+import {
+  asExtensionContext,
+  asOutputChannel,
+  asWebview,
+  createExtensionContextStub,
+  createOutputChannelStub,
+  createWebviewStub,
+  ExtensionContextStub,
+  WebviewStub,
+} from './helpers/vscode';
 
 suite('WebviewMessageHandler Comprehensive', () => {
   let handler: WebviewMessageHandler;
-  let mockWebview: any;
-  let mockContext: any;
+  let mockWebview: WebviewStub;
+  let mockContext: ExtensionContextStub;
   let sandbox: sinon.SinonSandbox;
   let postMessageSpy: sinon.SinonSpy;
   let stateManager: StateManager;
@@ -16,27 +27,20 @@ suite('WebviewMessageHandler Comprehensive', () => {
   setup(() => {
     sandbox = sinon.createSandbox();
     postMessageSpy = sandbox.spy();
-    mockWebview = { postMessage: postMessageSpy };
-    mockContext = {
-      globalState: { get: sandbox.stub(), update: sandbox.stub().resolves() },
-      secrets: {
-        get: sandbox.stub().resolves('key'),
-        store: sandbox.stub().resolves(),
-        delete: sandbox.stub().resolves(),
-      },
-      extensionUri: { path: '/test' },
-      extension: { packageJSON: { version: '1.0.0' } },
-    };
+    mockWebview = createWebviewStub(sandbox, {
+      postMessage: sandbox.stub().callsFake(postMessageSpy),
+    });
+    mockContext = createExtensionContextStub(sandbox);
     stateManager = new StateManager();
     handler = new WebviewMessageHandler(
-      mockWebview,
-      mockContext,
+      asWebview(mockWebview),
+      asExtensionContext(mockContext),
       'http://localhost:3845',
       stateManager,
       '1.0.0',
       'ko',
     );
-    Logger.initialize({ appendLine: () => {}, clear: () => {} } as any);
+    Logger.initialize(asOutputChannel(createOutputChannelStub(sandbox)));
   });
 
   teardown(() => {
@@ -105,13 +109,12 @@ suite('WebviewMessageHandler Comprehensive', () => {
   });
 
   test('handle prompt.generate', async () => {
-    const mockAgent = {
-      setApiKey: sandbox.stub().resolves(),
+    const mockAgent = createAgentStub(sandbox, {
       generateCode: async function* () {
         yield 'chunk';
       },
-    };
-    sandbox.stub(AgentFactory, 'getAgent').returns(mockAgent as any);
+    });
+    sandbox.stub(AgentFactory, 'getAgent').returns(mockAgent);
     await handler.handle({
       command: 'prompt.generate',
       payload: { userPrompt: 'ok', outputFormat: 'html' },
@@ -124,14 +127,13 @@ suite('WebviewMessageHandler Comprehensive', () => {
     const waitForRelease = new Promise<void>((resolve) => {
       releaseChunk = resolve;
     });
-    const mockAgent = {
-      setApiKey: sandbox.stub().resolves(),
+    const mockAgent = createAgentStub(sandbox, {
       generateCode: async function* () {
         await waitForRelease;
         yield 'chunk';
       },
-    };
-    sandbox.stub(AgentFactory, 'getAgent').returns(mockAgent as any);
+    });
+    sandbox.stub(AgentFactory, 'getAgent').returns(mockAgent);
 
     const first = handler.handle({
       command: 'prompt.generate',
@@ -161,8 +163,7 @@ suite('WebviewMessageHandler Comprehensive', () => {
     const waitForRelease = new Promise<void>((resolve) => {
       releaseChunk = resolve;
     });
-    const mockAgent = {
-      setApiKey: sandbox.stub().resolves(),
+    const mockAgent = createAgentStub(sandbox, {
       generateCode: async function* (_payload: any, signal?: AbortSignal) {
         await waitForRelease;
         if (signal?.aborted) {
@@ -170,8 +171,8 @@ suite('WebviewMessageHandler Comprehensive', () => {
         }
         yield 'chunk';
       },
-    };
-    sandbox.stub(AgentFactory, 'getAgent').returns(mockAgent as any);
+    });
+    sandbox.stub(AgentFactory, 'getAgent').returns(mockAgent);
 
     const first = handler.handle({
       command: 'prompt.generate',
@@ -199,15 +200,14 @@ suite('WebviewMessageHandler Comprehensive', () => {
     const waitForRelease = new Promise<void>((resolve) => {
       releaseChunk = resolve;
     });
-    const mockAgent = {
-      setApiKey: sandbox.stub().resolves(),
+    const mockAgent = createAgentStub(sandbox, {
       generateCode: async function* (_payload: any, signal?: AbortSignal) {
         await waitForRelease;
         if (signal?.aborted) throw new Error('취소');
         yield 'chunk';
       },
-    };
-    sandbox.stub(AgentFactory, 'getAgent').returns(mockAgent as any);
+    });
+    sandbox.stub(AgentFactory, 'getAgent').returns(mockAgent);
     const first = handler.handle({
       command: 'prompt.generate',
       payload: { userPrompt: 'x', outputFormat: 'html', requestId: 'req-A' },

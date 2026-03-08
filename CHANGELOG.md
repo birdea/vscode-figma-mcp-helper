@@ -4,6 +4,15 @@ This project tracks release notes with `conventional-changelog`.
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-03-08
+
+- Added `local / remote` connection mode selection in the Setup panel.
+- Added remote Figma authentication backed by a dedicated OAuth worker.
+- Added remote design data and screenshot fetching through the OAuth + REST flow.
+- Added URI callback handling for remote auth completion inside VS Code.
+- Added a bundled Cloudflare Worker project for Figma OAuth and REST proxy endpoints.
+- Hardened remote URL validation and worker-side Figma URL parsing for CodeQL compliance.
+
 ## [0.2.1] - 2026-03-08
 
 - Updated Marketplace listing content for the extension details page.

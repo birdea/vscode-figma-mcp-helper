@@ -22,17 +22,18 @@
 
 - Setup 패널에 `local / remote` 선택 UI 추가
 - `local`에서는 `Connect`, `remote`에서는 `Auth Login` 액션 분기
-- remote auth URL을 여는 시작 액션 추가
-- 관련 설정 키 추가
+- remote OAuth callback 처리
+- access token / refresh token 저장
+- remote 연결 상태 확인
+- remote 데이터/스크린샷 API 연동
+- 전용 OAuth Worker 추가
+- 관련 설정 키 및 기본값 추가
 
 ### 미완료
 
-- OAuth callback 처리
-- access token / refresh token 저장
 - token refresh
-- remote 연결 상태 확인
-- remote 데이터/스크린샷 API 연동
 - local/remote 응답 정규화
+- publish/release 이후 실제 사용자 환경에서의 remote smoke test 누적
 
 ## 권장 구조
 
@@ -90,6 +91,13 @@
 - REST API로 이미지 조회
 - 현재 screenshot preview/editor 흐름과 연결
 
+## v0.3.0 결과
+
+- 이번 릴리즈에서 `remote = OAuth + REST` 최소 동작 경로가 구현되었다.
+- 사용자는 기본 제공 Worker를 통해 브라우저 로그인 후 VS Code로 복귀할 수 있다.
+- remote 모드에서 연결 상태 확인, 디자인 데이터 조회, 스크린샷 조회가 가능하다.
+- 현재 남은 핵심 과제는 refresh, 응답 정규화 고도화, 운영 안정화다.
+
 ## 핵심 결정 사항
 
 - 현재 요구 범위에는 `remote direct MCP`보다 `OAuth + REST`가 적합하다.
@@ -126,6 +134,13 @@
 - E2E 테스트
   - `local connect -> fetch -> screenshot`
   - `remote login -> connected -> fetch -> screenshot`
+
+## 릴리즈 체크
+
+- `npm run lint`
+- `npm run test:coverage`
+- `npm run build`
+- `npm run typecheck` in `workers/`
 
 ## 참고
 

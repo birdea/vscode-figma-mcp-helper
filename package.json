@@ -9,12 +9,34 @@
     "type": "git",
     "url": "https://github.com/birdea/vscode-figmalab.git"
   },
+  "bugs": {
+    "url": "https://github.com/bd-creative/figma-mcp-helper/issues"
+  },
+  "homepage": "https://github.com/birdea/vscode-figmalab#readme",
   "engines": {
     "vscode": "^1.85.0",
     "node": ">=20.0.0"
   },
   "categories": [
-    "Other"
+    "AI",
+    "Machine Learning"
+  ],
+  "galleryBanner": {
+    "color": "#1e1e1e",
+    "theme": "dark"
+  },
+  "badges": [
+    {
+      "url": "https://github.com/birdea/vscode-figmalab/actions/workflows/ci.yml/badge.svg",
+      "href": "https://github.com/birdea/vscode-figmalab/actions",
+      "description": "Build Status"
+    }
+  ],
+  "screenshots": [
+    {
+      "path": "images/screenshot-1.png",
+      "label": "Figma MCP Helper — Setup & Code Generation"
+    }
   ],
   "activationEvents": [
     "onView:figma-mcp-helper.setup"
@@ -119,8 +141,17 @@
             "gemini",
             "claude"
           ],
+          "enumDescriptions": [
+            "Google Gemini",
+            "Anthropic Claude"
+          ],
           "default": "gemini",
           "description": "%configuration.defaultAgent.description%"
+        },
+        "figma-mcp-helper.defaultModel": {
+          "type": "string",
+          "default": "",
+          "description": "%configuration.defaultModel.description%"
         },
         "figma-mcp-helper.mcpEndpoint": {
           "type": "string",

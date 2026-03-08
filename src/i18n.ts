@@ -115,7 +115,7 @@ const messages: Record<UiLocale, Record<string, MessageValue>> = {
     'figma.mcpPlaceholder': 'https://figma.com/file/... 또는 JSON',
     'figma.fetchData': '데이터 가져오기',
     'figma.screenshot': '스크린샷',
-    'figma.screenshotAlt': 'Figma screenshot preview',
+    'figma.screenshotAlt': 'Figma 스크린샷',
     'figma.warn.enterData': 'Figma URL 또는 JSON 데이터를 먼저 입력하세요.',
     'figma.info.loadingData': 'MCP 데이터를 불러오는 중입니다...',
     'figma.warn.enterDataForScreenshot': '스크린샷을 위해 MCP 데이터를 먼저 입력하세요.',
@@ -129,7 +129,7 @@ const messages: Record<UiLocale, Record<string, MessageValue>> = {
     'figma.title.fetchDisabled': 'Figma URL 또는 JSON을 입력하면 사용할 수 있습니다.',
     'figma.title.screenshotNeedsData': 'Figma URL 또는 JSON을 먼저 입력하세요.',
     'figma.title.screenshotNeedsConnection': 'MCP 서버에 연결한 뒤 사용할 수 있습니다.',
-    'figma.preview.unable': '[Unable to render data preview]',
+    'figma.preview.unable': '[데이터 미리보기를 표시할 수 없습니다]',
     'host.figma.connectRefused': ({ endpoint }) =>
       `MCP 서버에 연결할 수 없습니다. 서버가 실행 중인지 확인하세요. (${endpoint})`,
     'host.figma.connectTimeout': ({ endpoint }) =>
@@ -181,7 +181,7 @@ const messages: Record<UiLocale, Record<string, MessageValue>> = {
     'prompt.includeUserPrompt': '사용자 프롬프트 포함',
     'prompt.includeMcpData': 'MCP 데이터 포함',
     'prompt.outputFormat': '출력 포맷',
-    'prompt.progress.aria': 'Prompt generation progress',
+    'prompt.progress.aria': '응답 생성 진행 중',
     'prompt.generate': '생성',
     'prompt.cancel': '취소',
     'prompt.resultTitle': '생성 결과',

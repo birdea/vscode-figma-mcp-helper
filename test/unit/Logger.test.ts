@@ -1,20 +1,25 @@
 import * as assert from 'assert';
 import * as sinon from 'sinon';
 import { Logger } from '../../src/logger/Logger';
+import { asOutputChannel, createOutputChannelStub, OutputChannelStub } from './helpers/vscode';
 
 suite('Logger', () => {
-  const mockOutputChannel = {
-    appendLine: sinon.stub(),
-    clear: sinon.stub(),
-  };
+  let sandbox: sinon.SinonSandbox;
+  let mockOutputChannel: OutputChannelStub;
 
   setup(() => {
-    Logger.initialize(mockOutputChannel as any);
-    (Logger as any).subscribers = new Set();
+    sandbox = sinon.createSandbox();
+    mockOutputChannel = createOutputChannelStub(sandbox);
+    Logger.initialize(asOutputChannel(mockOutputChannel));
+    (Logger as unknown as { subscribers: Set<(entry: unknown) => void> }).subscribers = new Set();
     mockOutputChannel.appendLine.reset();
     mockOutputChannel.clear.reset();
     Logger.clear();
     mockOutputChannel.clear.reset(); // reset after the clear() call in setup
+  });
+
+  teardown(() => {
+    sandbox.restore();
   });
 
   test('basic logging', () => {

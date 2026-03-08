@@ -228,6 +228,13 @@ export class PromptLayer {
     }
   }
 
+  onStreaming(progress: number, text?: string) {
+    this.onGenerating(progress);
+    if (text) {
+      this.onChunk(text);
+    }
+  }
+
   onResult(code: string, complete = true, message?: string, progress?: number) {
     this.generatedCode = code;
     const codeOutput = document.getElementById('code-output') as HTMLPreElement;

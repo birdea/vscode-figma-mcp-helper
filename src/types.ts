@@ -77,8 +77,7 @@ export type HostToWebviewMessage =
   | { event: 'agent.modelInfo'; info: ModelInfo }
   | { event: 'prompt.generateRequested' }
   | { event: 'prompt.cancelRequested' }
-  | { event: 'prompt.generating'; progress: number }
-  | { event: 'prompt.chunk'; text: string }
+  | { event: 'prompt.streaming'; progress: number; text?: string }
   | {
       event: 'prompt.result';
       code: string;

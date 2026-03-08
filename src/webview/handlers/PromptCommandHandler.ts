@@ -53,7 +53,7 @@ export class PromptCommandHandler {
     };
 
     Logger.info('prompt', `Generating ${resolvedPayload.outputFormat} code with ${agent}:${model}`);
-    this.post({ event: 'prompt.generating', progress: 0 });
+    this.post({ event: 'prompt.streaming', progress: 0 });
     this.isGenerating = true;
     this.currentRequestId = payload.requestId ?? null;
     this.abortController = new AbortController();
@@ -62,7 +62,7 @@ export class PromptCommandHandler {
     let progress = 5;
 
     try {
-      this.post({ event: 'prompt.generating', progress });
+      this.post({ event: 'prompt.streaming', progress });
       const gen = AgentFactory.getAgent(agent).generateCode(
         resolvedPayload,
         this.abortController.signal,
@@ -73,11 +73,10 @@ export class PromptCommandHandler {
         }
         fullCode += chunk;
         progress = Math.min(PROGRESS_CAP, progress + 5);
-        this.post({ event: 'prompt.generating', progress });
-        this.post({ event: 'prompt.chunk', text: chunk });
+        this.post({ event: 'prompt.streaming', progress, text: chunk });
       }
 
-      this.post({ event: 'prompt.generating', progress: 100 });
+      this.post({ event: 'prompt.streaming', progress: 100 });
       this.post({
         event: 'prompt.result',
         code: fullCode,

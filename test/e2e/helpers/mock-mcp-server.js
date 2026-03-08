@@ -63,7 +63,6 @@ const server = http.createServer((req, res) => {
               },
             };
           } else if (name === 'get_image') {
-            // A 100x100 blue square PNG with some color
             response.result = {
               base64:
                 'iVBORw0KGgoAAAANSUhEUgAAAGQAAABkAQMAAABKLAcXAAAABlBMVEX///8AAABVwtN+AAAAAXRSTlMAQObYZgAAABRJREFUeAFjGHxgwEFRYEFjEFwAAC/qEwG267YfAAAAAElFTkSuQmCC',
@@ -96,5 +95,5 @@ const server = http.createServer((req, res) => {
 
 server.listen(PORT, '127.0.0.1', () => {
   console.log(`[Mock Server] Listening on http://localhost:${PORT}/`);
-  console.log(`[Mock Server] Ready to mock Figma MCP interactions!`);
+  console.log('[Mock Server] Ready to mock Figma MCP interactions!');
 });

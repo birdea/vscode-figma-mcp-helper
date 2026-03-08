@@ -134,7 +134,13 @@ suite('PromptCommandHandler', () => {
 
     await handler.generate({ outputFormat: 'html' });
 
-    assert.ok(webview.postMessage.calledWithMatch({ event: 'prompt.chunk', text: 'hello ' }));
+    assert.ok(
+      webview.postMessage.calledWithMatch({
+        event: 'prompt.streaming',
+        progress: sinon.match.number,
+        text: 'hello ',
+      }),
+    );
     assert.ok(
       webview.postMessage.calledWithMatch({
         event: 'prompt.result',
@@ -155,8 +161,8 @@ suite('PromptCommandHandler', () => {
 
     await handler.generate({ outputFormat: 'html' });
 
-    assert.ok(webview.postMessage.calledWithMatch({ event: 'prompt.generating', progress: 0 }));
-    assert.ok(webview.postMessage.calledWithMatch({ event: 'prompt.generating', progress: 100 }));
+    assert.ok(webview.postMessage.calledWithMatch({ event: 'prompt.streaming', progress: 0 }));
+    assert.ok(webview.postMessage.calledWithMatch({ event: 'prompt.streaming', progress: 100 }));
   });
 
   test('generate reports agent errors as failed', async () => {

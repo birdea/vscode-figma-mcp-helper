@@ -50,8 +50,7 @@ export function init() {
         const msg = event.data as HostToWebviewMessage;
         if (msg.event === 'prompt.generateRequested') layer.onGenerateRequested();
         else if (msg.event === 'prompt.cancelRequested') layer.onCancelRequested();
-        else if (msg.event === 'prompt.generating') layer.onGenerating(msg.progress);
-        else if (msg.event === 'prompt.chunk') layer.onChunk(msg.text);
+        else if (msg.event === 'prompt.streaming') layer.onStreaming(msg.progress, msg.text);
         else if (msg.event === 'prompt.result')
           layer.onResult(msg.code, msg.complete, msg.message, msg.progress);
         else if (msg.event === 'prompt.estimateResult') layer.onEstimateResult(msg.tokens, msg.kb);

@@ -53,8 +53,7 @@ suite('UI Main Initialization', () => {
         MainModule.init();
 
         dispatch({ event: 'prompt.generateRequested' });
-        dispatch({ event: 'prompt.generating', progress: 30 });
-        dispatch({ event: 'prompt.chunk', text: 'hello' });
+        dispatch({ event: 'prompt.streaming', progress: 30, text: 'hello' });
         dispatch({ event: 'prompt.result', code: 'const x = 1;' });
         dispatch({ event: 'prompt.estimateResult', tokens: 100, kb: 0.5 });
         dispatch({ event: 'prompt.error', message: 'prompt error' });

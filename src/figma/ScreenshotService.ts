@@ -21,9 +21,14 @@ export class ScreenshotService {
     }
   }
 
-  async openInEditor(base64: string, fileId: string): Promise<void> {
+  async openInEditor(base64: string, fileId: string, nodeId?: string): Promise<void> {
     const buffer = Buffer.from(base64, 'base64');
-    const tmpPath = path.join(os.tmpdir(), `figmalab-${fileId}-${Date.now()}.png`);
+    const safeFileId = this.sanitizePathSegment(fileId, 'file');
+    const safeNodeId = nodeId ? this.sanitizePathSegment(nodeId, 'node') : '';
+    const tmpPath = path.join(
+      os.tmpdir(),
+      `figmalab-${safeFileId}${safeNodeId ? `-${safeNodeId}` : ''}-${Date.now()}.png`,
+    );
     const uri = vscode.Uri.file(tmpPath);
     await vscode.workspace.fs.writeFile(uri, buffer);
     this.tmpFiles.push(uri);
@@ -61,5 +66,15 @@ export class ScreenshotService {
       Logger.success('figma', `Screenshot saved: ${saveUri.fsPath}`);
       vscode.window.showInformationMessage(`Screenshot saved: ${saveUri.fsPath}`);
     }
+  }
+
+  private sanitizePathSegment(value: string, fallback: string): string {
+    const sanitized = value
+      .replace(/[^A-Za-z0-9_-]+/g, '_')
+      .replace(/_+/g, '_')
+      .replace(/^_+|_+$/g, '')
+      .slice(0, 64);
+
+    return sanitized || fallback;
   }
 }

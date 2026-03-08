@@ -197,7 +197,7 @@ export class FigmaLayer {
   }
 
   private renderToolList(methods: string[], connected: boolean) {
-    const hasExtraTools = connected && methods.length > 2;
+    const hasExtraTools = connected && methods.length > 0;
     this.setGuideMessage(
       hasExtraTools ? this.msg('figma.guide.availableTools', { count: methods.length }) : '',
     );

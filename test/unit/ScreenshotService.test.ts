@@ -15,6 +15,7 @@ suite('ScreenshotService', () => {
     service = new ScreenshotService(mockMcpClient as any);
     const vscode = require('vscode');
     vscode.workspace.fs.writeFile.resetHistory();
+    vscode.Uri.file.resetHistory();
     vscode.window.showSaveDialog.resetHistory();
     vscode.window.showInformationMessage.resetHistory();
     vscode.commands.executeCommand.resetHistory();
@@ -43,6 +44,14 @@ suite('ScreenshotService', () => {
      // writeFile and executeCommand should have been called
      assert.ok(vscode.workspace.fs.writeFile.called);
      assert.ok(vscode.commands.executeCommand.calledWith('vscode.open'));
+  });
+
+  test('openInEditor sanitizes file and node identifiers for temp path', async () => {
+    const vscode = require('vscode');
+    await service.openInEditor('base64', '../file', '../../node:id');
+    const tempPath = vscode.Uri.file.firstCall.args[0] as string;
+    assert.ok(!tempPath.includes('..'));
+    assert.ok(tempPath.includes('figmalab-file-node_id-'));
   });
 
   test('saveToWorkspace success', async () => {

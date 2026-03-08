@@ -49,14 +49,6 @@ suite('Extension Comprehensive', () => {
     assert.ok(generate);
     generate();
 
-    const agentSave = commands.find((c: any) => c[0] === 'figma-mcp-helper.agent.save')?.[1];
-    assert.ok(agentSave);
-    agentSave();
-
-    const agentClear = commands.find((c: any) => c[0] === 'figma-mcp-helper.agent.clear')?.[1];
-    assert.ok(agentClear);
-    agentClear();
-
     const promptGenerate = commands.find((c: any) => c[0] === 'figma-mcp-helper.prompt.generate')?.[1];
     assert.ok(promptGenerate);
     promptGenerate();

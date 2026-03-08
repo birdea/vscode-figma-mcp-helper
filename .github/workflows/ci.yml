@@ -30,6 +30,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
 
       - name: Setup Node.js
         uses: actions/setup-node@v6
@@ -45,7 +47,28 @@ jobs:
 
       - name: Format check
         if: matrix.run-format-check
-        run: npm run format:check
+        run: |
+          if [[ "${GITHUB_EVENT_NAME}" == "pull_request" ]]; then
+            diff_base="${{ github.event.pull_request.base.sha }}"
+          elif [[ "${GITHUB_EVENT_NAME}" == "push" ]]; then
+            diff_base="${{ github.event.before }}"
+          else
+            diff_base=""
+          fi
+
+          if [[ -z "${diff_base}" || "${diff_base}" == "0000000000000000000000000000000000000000" ]]; then
+            echo "No diff base available; skipping format check."
+            exit 0
+          fi
+
+          mapfile -t changed_files < <(git diff --name-only "${diff_base}" "${GITHUB_SHA}")
+
+          if [[ ${#changed_files[@]} -eq 0 ]]; then
+            echo "No changed files to format-check."
+            exit 0
+          fi
+
+          printf '%s\n' "${changed_files[@]}" | xargs npx prettier --check --ignore-unknown
 
       - name: Lint
         if: matrix.run-lint

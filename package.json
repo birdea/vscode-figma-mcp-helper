@@ -214,7 +214,7 @@
     "c8": "^11.0.0",
     "conventional-changelog": "^7.2.0",
     "esbuild": "^0.20.0",
-    "eslint": "^9.0.0",
+    "eslint": "^10.0.3",
     "eslint-config-prettier": "^10.1.8",
     "jsdom": "^28.1.0",
     "mocha": "^11.7.5",

@@ -121,14 +121,16 @@ suite('Webview workflow E2E', function () {
 });
 
 async function startMockServer(port: number): Promise<ChildProcess> {
-  const serverPath = path.join(process.cwd(), 'mock-mcp-server.js');
+  const serverPath = path.join(process.cwd(), 'test', 'e2e', 'helpers', 'mock-mcp-server.js');
   const child = fork(serverPath, [], {
     cwd: process.cwd(),
     env: { ...process.env, MOCK_MCP_PORT: String(port) },
+    execArgv: [],
     silent: true,
   });
 
   await new Promise<void>((resolve, reject) => {
+    let stderr = '';
     const timeout = setTimeout(() => {
       reject(new Error('Mock MCP server did not start in time'));
     }, 5000);
@@ -140,6 +142,10 @@ async function startMockServer(port: number): Promise<ChildProcess> {
       }
     });
 
+    child.stderr?.on('data', (chunk) => {
+      stderr += String(chunk);
+    });
+
     child.once('error', (error) => {
       clearTimeout(timeout);
       reject(error);
@@ -147,7 +153,14 @@ async function startMockServer(port: number): Promise<ChildProcess> {
 
     child.once('exit', (code) => {
       clearTimeout(timeout);
-      reject(new Error(`Mock MCP server exited early with code ${code}`));
+      const detail = stderr.trim();
+      reject(
+        new Error(
+          detail
+            ? `Mock MCP server exited early with code ${code}: ${detail}`
+            : `Mock MCP server exited early with code ${code}`,
+        ),
+      );
     });
   });
 

@@ -2,6 +2,7 @@ import * as assert from 'assert';
 import * as sinon from 'sinon';
 import * as vscode from 'vscode';
 import { FigmaCommandHandler } from '../../../src/webview/handlers/FigmaCommandHandler';
+import { Logger } from '../../../src/logger/Logger';
 import { StateManager } from '../../../src/state/StateManager';
 
 suite('FigmaCommandHandler', () => {
@@ -196,10 +197,18 @@ suite('FigmaCommandHandler', () => {
   });
 
   test('fetchScreenshot reports generic failure when screenshot service throws', async () => {
+    const loggerErrorStub = sandbox.stub(Logger, 'error');
     screenshotService.fetchScreenshot.rejects(new Error('broken'));
 
     await handler.fetchScreenshot('https://figma.com/file/ABCDE/demo?node-id=4-5');
 
+    assert.ok(
+      loggerErrorStub.calledWith(
+        'figma',
+        'Screenshot fetch failed for fileId=ABCDE, nodeId=4:5',
+        'broken',
+      ),
+    );
     assert.ok(webview.postMessage.calledWithMatch({ event: 'error', source: 'figma', message: sinon.match(/스크린샷을 가져오지 못했습니다/) }));
   });
 });

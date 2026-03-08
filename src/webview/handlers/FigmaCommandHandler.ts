@@ -119,9 +119,11 @@ export class FigmaCommandHandler {
       await this.screenshotService.openInEditor(base64, parsed.fileId, parsed.nodeId);
       this.post({ event: 'figma.screenshotResult', base64 });
     } catch (e) {
+      const errMessage = toErrorMessage(e);
       Logger.error(
         'figma',
-        `Screenshot fetch failed for fileId=${parsed.fileId}, nodeId=${parsed.nodeId}: ${toErrorMessage(e)}`,
+        `Screenshot fetch failed for fileId=${parsed.fileId}, nodeId=${parsed.nodeId}`,
+        errMessage,
       );
       this.post({
         event: 'error',

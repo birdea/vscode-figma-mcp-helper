@@ -45,6 +45,10 @@ suite('WebviewMessageHandler Comprehensive', () => {
       'ko',
     );
     Logger.initialize(asOutputChannel(createOutputChannelStub(sandbox)));
+    const vscode = require('vscode');
+    vscode.window.showInformationMessage.resetHistory();
+    vscode.env.openExternal.resetHistory();
+    vscode.workspace.getConfiguration.resetHistory();
   });
 
   teardown(() => {
@@ -67,19 +71,12 @@ suite('WebviewMessageHandler Comprehensive', () => {
 
   test('handle figma.connect in remote mode', async () => {
     const vscode = require('vscode');
-    vscode.workspace.getConfiguration.returns({
-      get: (key: string) =>
-        key === 'figma-mcp-helper.remoteMcpAuthUrl'
-          ? 'https://example.com/login'
-          : key === 'figma-mcp-helper.remoteMcpEndpoint'
-            ? 'https://worker.example.com'
-            : '',
-    });
 
     await handler.handle({ command: 'figma.connect', mode: 'remote' });
 
-    assert.ok(vscode.env.openExternal.called);
-    assert.ok(postMessageSpy.calledWithMatch({ event: 'figma.authStarted', mode: 'remote' }));
+    assert.ok(vscode.window.showInformationMessage.calledOnce);
+    assert.ok(vscode.env.openExternal.notCalled);
+    assert.ok(postMessageSpy.calledWithMatch({ event: 'figma.status', connected: false }));
   });
 
   test('handle figma.openSettings', async () => {

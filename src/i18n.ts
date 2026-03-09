@@ -66,6 +66,8 @@ const messages: Record<UiLocale, Record<string, MessageValue>> = {
       'Could not fetch remote Figma data. Check the remote auth session and endpoint.',
     'host.figma.remoteScreenshotFailed':
       'Could not fetch the remote screenshot. Check the remote auth session and endpoint.',
+    'host.figma.remoteComingSoon':
+      'Remote MCP support is planned for a future update. The Remote UI stays visible for now, but Auth Login and remote fetch are not available yet.',
     'host.figma.remoteAuthCompleted':
       'Remote Figma authentication completed. Return to Setup and connect again.',
     'host.figma.remoteAuthCallbackFailed':
@@ -202,6 +204,8 @@ const messages: Record<UiLocale, Record<string, MessageValue>> = {
       'Remote Figma 데이터를 가져오지 못했습니다. remote 인증 상태와 엔드포인트를 확인하세요.',
     'host.figma.remoteScreenshotFailed':
       'Remote 스크린샷을 가져오지 못했습니다. remote 인증 상태와 엔드포인트를 확인하세요.',
+    'host.figma.remoteComingSoon':
+      'Remote MCP는 추후 업데이트에서 지원할 예정입니다. 현재는 UI만 유지되고 있으며 Auth Login과 remote 데이터 가져오기는 아직 사용할 수 없습니다.',
     'host.figma.remoteAuthCompleted':
       'Remote Figma 인증이 완료되었습니다. Setup으로 돌아가 다시 연결하세요.',
     'host.figma.remoteAuthCallbackFailed':

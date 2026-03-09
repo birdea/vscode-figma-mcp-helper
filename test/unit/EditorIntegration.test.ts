@@ -230,7 +230,7 @@ suite('EditorIntegration', () => {
     await integration.openPreviewPanel('<div class="bg-slate-900 text-white px-4">preview</div>', 'tailwind');
 
     assert.ok(previewPanel.title.includes('Tailwind Preview'));
-    assert.ok(previewPanel.webview.html.includes('cdn.tailwindcss.com'));
+    assert.ok(previewPanel.webview.html.includes('https://cdn.tailwindcss.com'));
     assert.ok(previewPanel.webview.html.includes('allow-scripts'));
   });
 });

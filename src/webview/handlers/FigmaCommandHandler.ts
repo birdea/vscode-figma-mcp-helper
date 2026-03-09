@@ -10,8 +10,6 @@ import { ConnectionMode, HostToWebviewMessage } from '../../types';
 import {
   CONFIG_KEYS,
   DEFAULT_MCP_ENDPOINT,
-  DEFAULT_REMOTE_MCP_AUTH_URL,
-  DEFAULT_REMOTE_MCP_ENDPOINT,
 } from '../../constants';
 import { StateManager } from '../../state/StateManager';
 import { UiLocale, t } from '../../i18n';
@@ -36,20 +34,6 @@ export class FigmaCommandHandler {
     this.webview.postMessage(msg);
   }
 
-  private toTrustedFigmaUrl(input: string): string | undefined {
-    try {
-      const url = new URL(input);
-      const hostname = url.hostname.toLowerCase();
-      if (hostname === 'figma.com' || hostname === 'www.figma.com') {
-        return url.toString();
-      }
-    } catch {
-      // Ignore non-URL inputs and fall back to parsed fileKey/nodeId fields.
-    }
-
-    return undefined;
-  }
-
   async connect(mode: ConnectionMode = 'local') {
     this.activeMode = mode;
     if (mode === 'remote') {
@@ -64,6 +48,40 @@ export class FigmaCommandHandler {
     const targetKey =
       mode === 'remote' ? CONFIG_KEYS.REMOTE_MCP_AUTH_URL : CONFIG_KEYS.MCP_ENDPOINT;
     await vscode.commands.executeCommand('workbench.action.openSettings', targetKey);
+  }
+
+  private async notifyRemoteComingSoon(
+    kind: 'connect' | 'fetch' | 'screenshot',
+    parsed?: ReturnType<typeof parseMcpData>,
+  ) {
+    const message = t(this.locale, 'host.figma.remoteComingSoon');
+    await vscode.window.showInformationMessage(message);
+    Logger.info('figma', `Remote MCP ${kind} requested while the feature is disabled`);
+
+    if (kind === 'connect') {
+      this.post({
+        event: 'figma.status',
+        connected: false,
+        methods: [],
+        error: message,
+      });
+      return;
+    }
+
+    if (kind === 'fetch') {
+      this.post({
+        event: 'figma.dataFetchError',
+        message,
+        fallbackData: parsed,
+      });
+      return;
+    }
+
+    this.post({
+      event: 'error',
+      source: 'figma',
+      message,
+    });
   }
 
   private async connectLocal() {
@@ -98,103 +116,8 @@ export class FigmaCommandHandler {
     }
   }
 
-  private async startRemoteAuthLogin() {
-    const config = vscode.workspace.getConfiguration();
-    const authUrl = (
-      config.get<string>(CONFIG_KEYS.REMOTE_MCP_AUTH_URL) || DEFAULT_REMOTE_MCP_AUTH_URL
-    ).trim();
-
-    if (!authUrl) {
-      this.post({
-        event: 'figma.status',
-        connected: false,
-        methods: [],
-        error: t(this.locale, 'host.figma.remoteAuthUrlMissing'),
-      });
-      return;
-    }
-
-    try {
-      const finalAuthUrl = await this.remoteAuthService.buildAuthUrl(
-        authUrl,
-        this.context.extension.id,
-      );
-      await vscode.env.openExternal(vscode.Uri.parse(finalAuthUrl));
-      Logger.info('figma', `Started remote auth flow: ${finalAuthUrl}`);
-      this.post({ event: 'figma.authStarted', mode: 'remote', authUrl: finalAuthUrl });
-    } catch (e) {
-      Logger.error('figma', `Invalid remote MCP auth URL: ${authUrl}`, toErrorMessage(e));
-      this.post({
-        event: 'figma.status',
-        connected: false,
-        methods: [],
-        error: t(this.locale, 'host.figma.remoteAuthUrlInvalid'),
-      });
-    }
-  }
-
-  private isRemoteAuthRejected(error?: string): boolean {
-    if (!error) {
-      return false;
-    }
-
-    return /\b(401|403)\b|unauthorized|forbidden/i.test(error);
-  }
-
   private async connectRemote() {
-    const config = vscode.workspace.getConfiguration();
-    const baseUrl = (
-      config.get<string>(CONFIG_KEYS.REMOTE_MCP_ENDPOINT) || DEFAULT_REMOTE_MCP_ENDPOINT
-    ).trim();
-    if (!baseUrl) {
-      this.post({
-        event: 'figma.status',
-        connected: false,
-        methods: [],
-        error: t(this.locale, 'host.figma.remoteEndpointMissing'),
-      });
-      return;
-    }
-
-    const session = await this.remoteAuthService.getSession();
-    const tokenExpired = !!session?.expiresAt && session.expiresAt <= Date.now();
-    if (!session?.accessToken || tokenExpired) {
-      if (tokenExpired) {
-        Logger.info('figma', 'Saved remote auth token expired — restarting login flow');
-        await this.remoteAuthService.clearSession();
-      }
-      await this.startRemoteAuthLogin();
-      return;
-    }
-
-    try {
-      const result = await this.remoteApiClient.checkStatus(baseUrl, session.accessToken);
-      const connected = !!result.connected;
-      if (!connected && this.isRemoteAuthRejected(result.error)) {
-        Logger.warn('figma', `Saved remote auth session rejected: ${result.error}`);
-        await this.remoteAuthService.clearSession();
-        await this.startRemoteAuthLogin();
-        return;
-      }
-
-      this.post({
-        event: 'figma.status',
-        connected,
-        methods: [],
-        error: connected
-          ? undefined
-          : result.error || t(this.locale, 'host.figma.remoteAuthRequired'),
-      });
-    } catch (e) {
-      const errMessage = toErrorMessage(e);
-      Logger.error('figma', `Remote status check failed at ${baseUrl}: ${errMessage}`);
-      this.post({
-        event: 'figma.status',
-        connected: false,
-        methods: [],
-        error: t(this.locale, 'host.figma.remoteConnectGeneric'),
-      });
-    }
+    await this.notifyRemoteComingSoon('connect');
   }
 
   async fetchData(input: string) {
@@ -276,96 +199,18 @@ export class FigmaCommandHandler {
   }
 
   private async fetchRemoteData(
-    input: string,
+    _input: string,
     parsed: ReturnType<typeof parseMcpData>,
   ): Promise<void> {
-    const config = vscode.workspace.getConfiguration();
-    const baseUrl = (
-      config.get<string>(CONFIG_KEYS.REMOTE_MCP_ENDPOINT) || DEFAULT_REMOTE_MCP_ENDPOINT
-    ).trim();
-    const session = await this.remoteAuthService.getSession();
-
-    if (!baseUrl || !session?.accessToken) {
-      this.post({
-        event: 'figma.dataFetchError',
-        message: t(this.locale, 'host.figma.remoteAuthRequired'),
-        fallbackData: parsed,
-      });
-      return;
-    }
-
-    try {
-      const figmaUrl = this.toTrustedFigmaUrl(input);
-      const data = await this.remoteApiClient.fetchDesignContext(baseUrl, session.accessToken, {
-        ...(figmaUrl ? { figmaUrl } : {}),
-        fileKey: parsed.fileId || undefined,
-        nodeId: parsed.nodeId || undefined,
-      });
-      this.stateManager.setLastMcpData(data);
-
-      const shouldOpenInEditor =
-        config.get<boolean>(CONFIG_KEYS.OPEN_FETCH_RESULT_IN_EDITOR, false) ?? false;
-      if (shouldOpenInEditor) {
-        await this.editorIntegration.openInEditor(JSON.stringify(data, null, 2), 'json');
-      }
-
-      this.post({ event: 'figma.dataResult', data });
-    } catch (e) {
-      const errMessage = toErrorMessage(e);
-      Logger.error(
-        'figma',
-        `Remote data fetch failed for fileId=${parsed.fileId}, nodeId=${parsed.nodeId}: ${errMessage}`,
-      );
-      this.post({
-        event: 'figma.dataFetchError',
-        message: t(this.locale, 'host.figma.remoteFetchGeneric'),
-        fallbackData: parsed,
-      });
-    }
+    await this.notifyRemoteComingSoon('fetch', parsed);
   }
 
   private async fetchRemoteScreenshot(
-    input: string,
-    fileId: string,
-    nodeId: string,
+    _input: string,
+    _fileId: string,
+    _nodeId: string,
   ): Promise<void> {
-    const config = vscode.workspace.getConfiguration();
-    const baseUrl = (
-      config.get<string>(CONFIG_KEYS.REMOTE_MCP_ENDPOINT) || DEFAULT_REMOTE_MCP_ENDPOINT
-    ).trim();
-    const session = await this.remoteAuthService.getSession();
-
-    if (!baseUrl || !session?.accessToken) {
-      this.post({
-        event: 'error',
-        source: 'figma',
-        message: t(this.locale, 'host.figma.remoteAuthRequired'),
-      });
-      return;
-    }
-
-    try {
-      const figmaUrl = this.toTrustedFigmaUrl(input);
-      const result = await this.remoteApiClient.fetchScreenshot(baseUrl, session.accessToken, {
-        ...(figmaUrl ? { figmaUrl } : {}),
-        fileKey: fileId,
-        nodeId: nodeId || undefined,
-      });
-      await this.screenshotService.openInEditor(result.data, fileId, nodeId);
-      this.post({ event: 'figma.screenshotResult', base64: result.data });
-    } catch (e) {
-      const errMessage = toErrorMessage(e);
-      Logger.error(
-        'figma',
-        `Remote screenshot fetch failed for fileId=${fileId}, nodeId=${nodeId}`,
-        errMessage,
-      );
-      this.post({
-        event: 'error',
-        source: 'figma',
-        message: t(this.locale, 'host.figma.remoteScreenshotFailed'),
-      });
-    }
+    await this.notifyRemoteComingSoon('screenshot');
   }
 
   private toFriendlyConnectionMessage(message: string, endpoint: string): string {

@@ -4,6 +4,12 @@ This project tracks release notes with `conventional-changelog`.
 
 ## [Unreleased]
 
+## [0.5.4] - 2026-03-10
+
+- Switched the release workflow to build, attach, and publish platform-specific VSIX packages for `darwin-arm64`, `darwin-x64`, `linux-x64`, and `win32-x64`.
+- Updated the Marketplace release packaging so browser preview runtime dependencies can match the user's platform.
+- Refreshed the README release highlights to describe the platform-specific distribution pipeline.
+
 ## [0.5.2] - 2026-03-10
 
 - Packaged the browser preview runtime dependencies into the macOS VSIX so `Open In Browser` works after installation.

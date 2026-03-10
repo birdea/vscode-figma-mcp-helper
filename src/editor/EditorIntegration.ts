@@ -4,10 +4,7 @@ import * as os from 'os';
 import * as path from 'path';
 import { Logger } from '../logger/Logger';
 import { OutputFormat } from '../types';
-import {
-  BrowserPreviewService,
-  isBrowserPreviewUnavailableError,
-} from './BrowserPreviewService';
+import { BrowserPreviewService, isBrowserPreviewUnavailableError } from './BrowserPreviewService';
 import { PreviewPanelService } from './PreviewPanelService';
 
 export type PreviewOpenTarget = 'browser' | 'panel';

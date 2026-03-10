@@ -539,7 +539,7 @@ function buildStaticPanelHtml(
 
 function prepareStaticPreviewHtml(previewHtml: string, tailwindEnabled: boolean): string {
   const sanitizedPreviewHtml = tailwindEnabled ? previewHtml : stripScriptTags(previewHtml);
-  const scriptPolicy = tailwindEnabled ? " script-src https://cdn.tailwindcss.com;" : '';
+  const scriptPolicy = tailwindEnabled ? ' script-src https://cdn.tailwindcss.com;' : '';
   const connectPolicy = tailwindEnabled ? ' connect-src http://localhost:3845 https:;' : '';
   const csp = `<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline' https://cdn.tailwindcss.com;${scriptPolicy} img-src data: blob: http://localhost:3845 https:; font-src https:;${connectPolicy}">`;
   const tailwindScript = tailwindEnabled

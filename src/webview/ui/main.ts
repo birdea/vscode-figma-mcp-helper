@@ -49,6 +49,12 @@ export function init() {
           case 'figma.dataResult':
             figma.onDataResult(msg.data, msg.kind);
             break;
+          case 'figma.sourceDataResult':
+            figma.onSourceDataResult(msg.count, msg.images);
+            break;
+          case 'figma.sourceDataError':
+            figma.onSourceDataError(msg.message);
+            break;
           case 'figma.dataFetchError':
             figma.onError(msg.message);
             break;

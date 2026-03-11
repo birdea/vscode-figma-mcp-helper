@@ -338,6 +338,69 @@ textarea:disabled {
   justify-content: space-between;
 }
 
+.source-data-gallery {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.source-data-gallery-track {
+  display: flex;
+  gap: 10px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+}
+
+.source-card {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 116px;
+  min-width: 116px;
+  border: 1px solid color-mix(in srgb, var(--vscode-panel-border) 55%, transparent);
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--vscode-editor-background) 88%, transparent);
+  padding: 8px;
+  color: inherit;
+  cursor: pointer;
+}
+
+.source-card:hover {
+  border-color: var(--vscode-focusBorder);
+  background: color-mix(in srgb, var(--vscode-button-background) 10%, var(--vscode-editor-background));
+}
+
+.source-card-thumb {
+  width: 100px;
+  height: 100px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border-radius: 8px;
+  background:
+    linear-gradient(45deg, rgba(255, 255, 255, 0.03) 25%, transparent 25%) 0 0 / 16px 16px,
+    linear-gradient(-45deg, rgba(255, 255, 255, 0.03) 25%, transparent 25%) 0 8px / 16px 16px,
+    color-mix(in srgb, var(--vscode-input-background) 85%, transparent);
+}
+
+.source-card-image {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+}
+
+.source-card-label {
+  font-size: 11px;
+  line-height: 1.35;
+  color: var(--vscode-descriptionForeground);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .row {
   display: flex;
   align-items: center;

@@ -37,6 +37,19 @@ suite('UI Main Initialization', () => {
     dispatch({ event: 'figma.authStarted', mode: 'remote', authUrl: 'https://example.com/login' });
     dispatch({ event: 'figma.status', connected: true, methods: ['get_file'] });
     dispatch({ event: 'figma.dataResult', data: { id: '1' }, kind: 'designContext' });
+    dispatch({
+      event: 'figma.sourceDataResult',
+      count: 2,
+      images: [
+        {
+          assetKey: 'asset-1',
+          url: 'http://localhost:3845/assets/test.svg',
+          suggestedName: 'test.svg',
+          thumbnailDataUrl: 'data:image/svg+xml;base64,PHN2Zz48L3N2Zz4=',
+        },
+      ],
+    });
+    dispatch({ event: 'figma.sourceDataError', message: 'source failed' });
     dispatch({ event: 'figma.dataFetchError', message: 'fetch failed', fallbackData: {} });
     dispatch({ event: 'figma.screenshotResult', base64: 'aGVsbG8=' });
     dispatch({ event: 'error', source: 'figma', message: 'figma error' });

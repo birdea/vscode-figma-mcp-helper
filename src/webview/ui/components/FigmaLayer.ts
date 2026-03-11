@@ -1,6 +1,6 @@
 import { vscode } from '../vscodeApi';
 import { getDocumentLocale, t, UiLocale } from '../../../i18n';
-import { ConnectionMode, FigmaDataResultKind } from '../../../types';
+import { ConnectionMode, FigmaDataResultKind, SourceDataThumbnail } from '../../../types';
 
 export class FigmaLayer {
   private connected = false;
@@ -9,6 +9,8 @@ export class FigmaLayer {
     document.body?.dataset.mcpMode === 'remote' ? 'remote' : 'local';
   private readonly locale: UiLocale = getDocumentLocale();
   private readonly stateKey = 'figmaMcpData';
+  private readonly sourceStateKey = 'figmaSourceDataUrl';
+  private sourceImages: SourceDataThumbnail[] = [];
 
   render(): string {
     return `
@@ -58,17 +60,45 @@ export class FigmaLayer {
   </div>
   <div class="notice hidden" id="figma-data-notice"></div>
 </section>
+<section class="panel panel-compact">
+  <div class="section-heading">
+    <div>
+      <div class="panel-title">${this.msg('figma.sourceDataTitle')}</div>
+      <div class="inline-note">${this.msg('figma.sourceDataHint')}</div>
+    </div>
+  </div>
+  <div class="field-group">
+    <textarea id="source-data-url" placeholder="${this.msg('figma.sourceDataPlaceholder')}"></textarea>
+  </div>
+  <div class="btn-row">
+    <button class="primary" id="btn-fetch-source-data"><i class="codicon codicon-cloud-download"></i>${this.msg('figma.sourceDataGet')}</button>
+  </div>
+  <div class="notice hidden" id="figma-source-data-notice"></div>
+  <div class="source-data-gallery hidden" id="source-data-gallery-section">
+    <div class="panel-title">${this.msg('figma.sourceDataPreviewTitle')}</div>
+    <div class="source-data-gallery-track" id="source-data-gallery"></div>
+  </div>
+</section>
 `;
   }
 
   mount() {
     const dataInput = document.getElementById('mcp-data') as HTMLTextAreaElement | null;
+    const sourceInput = document.getElementById('source-data-url') as HTMLTextAreaElement | null;
     if (dataInput) {
       dataInput.value = this.getSavedMcpData();
+    }
+    if (sourceInput) {
+      sourceInput.value = this.getSavedSourceDataUrl();
     }
 
     dataInput?.addEventListener('input', () => {
       this.persistMcpData(dataInput.value);
+      this.updateActionState();
+    });
+
+    sourceInput?.addEventListener('input', () => {
+      this.persistSourceDataUrl(sourceInput.value);
       this.updateActionState();
     });
 
@@ -118,6 +148,24 @@ export class FigmaLayer {
       this.clearDataNotice();
       this.updateActionState();
       vscode.postMessage({ command: 'figma.clearData' });
+    });
+
+    document.getElementById('btn-fetch-source-data')?.addEventListener('click', () => {
+      const url = sourceInput?.value.trim() ?? '';
+      if (!url) {
+        this.setSourceDataNotice('warn', this.msg('figma.warn.enterSourceDataUrl'));
+        return;
+      }
+      if (this.connectionMode === 'remote') {
+        this.setSourceDataNotice('warn', this.msg('figma.warn.sourceDataRemoteUnavailable'));
+        return;
+      }
+      if (!this.connected) {
+        this.setSourceDataNotice('warn', this.msg('figma.warn.connectBeforeSourceData'));
+        return;
+      }
+      this.setSourceDataNotice('info', this.msg('figma.info.loadingSourceData'));
+      vscode.postMessage({ command: 'figma.fetchSourceData', url });
     });
 
     document.getElementById('btn-connect')?.addEventListener('click', () => {
@@ -238,6 +286,57 @@ export class FigmaLayer {
     this.setDataNotice('error', message);
   }
 
+  onSourceDataResult(count: number, images: SourceDataThumbnail[]) {
+    this.sourceImages = images;
+    this.renderSourceDataGallery();
+    this.setSourceDataNotice('success', this.msg('figma.success.sourceDataBatchLoaded', { count }));
+  }
+
+  onSourceDataError(message: string) {
+    this.setSourceDataNotice('error', message);
+  }
+
+  private renderSourceDataGallery() {
+    const section = document.getElementById('source-data-gallery-section');
+    const gallery = document.getElementById('source-data-gallery');
+    if (!section || !gallery) {
+      return;
+    }
+
+    gallery.replaceChildren();
+    if (this.sourceImages.length === 0) {
+      section.classList.add('hidden');
+      return;
+    }
+
+    for (const image of this.sourceImages) {
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'source-card';
+      button.title = `${image.suggestedName}\n${this.msg('figma.sourceDataOpenAsset')}`;
+      button.addEventListener('click', () => {
+        vscode.postMessage({ command: 'figma.openSourceDataAsset', assetKey: image.assetKey });
+      });
+
+      const frame = document.createElement('span');
+      frame.className = 'source-card-thumb';
+      const img = document.createElement('img');
+      img.className = 'source-card-image';
+      img.src = image.thumbnailDataUrl;
+      img.alt = image.suggestedName;
+      frame.appendChild(img);
+
+      const label = document.createElement('span');
+      label.className = 'source-card-label';
+      label.textContent = image.suggestedName;
+
+      button.append(frame, label);
+      gallery.appendChild(button);
+    }
+
+    section.classList.remove('hidden');
+  }
+
   private setConnectionMode(mode: ConnectionMode) {
     if (this.connectionMode === mode) return;
     this.connectionMode = mode;
@@ -245,6 +344,7 @@ export class FigmaLayer {
     this.clearDataNotice();
     this.syncConnectionModeUI();
     this.syncConnectButton();
+    this.updateActionState();
     if (!this.connected) {
       this.setGuideMessage(mode === 'remote' ? this.msg('figma.guide.remoteLogin') : '');
     }
@@ -253,9 +353,13 @@ export class FigmaLayer {
   private updateActionState() {
     const dataInput = document.getElementById('mcp-data') as HTMLTextAreaElement | null;
     const hasData = !!dataInput?.value.trim();
+    const sourceInput = document.getElementById('source-data-url') as HTMLTextAreaElement | null;
+    const hasSourceUrl = !!sourceInput?.value.trim();
+    const isRemote = this.connectionMode === 'remote';
 
     const fetchBtn = document.getElementById('btn-fetch') as HTMLButtonElement | null;
     const clearBtn = document.getElementById('btn-clear-data') as HTMLButtonElement | null;
+    const sourceBtn = document.getElementById('btn-fetch-source-data') as HTMLButtonElement | null;
     const metadataBtn = document.getElementById('btn-fetch-metadata') as HTMLButtonElement | null;
     const screenshotBtn = document.getElementById('btn-screenshot') as HTMLButtonElement | null;
     const variableDefsBtn = document.getElementById(
@@ -264,6 +368,16 @@ export class FigmaLayer {
 
     if (fetchBtn) fetchBtn.disabled = !hasData;
     if (clearBtn) clearBtn.disabled = !hasData;
+    if (sourceBtn) {
+      sourceBtn.disabled = !hasSourceUrl || !this.connected || isRemote;
+      sourceBtn.title = !hasSourceUrl
+        ? this.msg('figma.title.sourceDataNeedsUrl')
+        : isRemote
+          ? this.msg('figma.title.sourceDataRemoteUnavailable')
+          : !this.connected
+            ? this.msg('figma.title.sourceDataNeedsConnection')
+            : '';
+    }
     if (fetchBtn) {
       fetchBtn.title = hasData ? '' : this.msg('figma.title.fetchDisabled');
     }
@@ -294,7 +408,7 @@ export class FigmaLayer {
   }
 
   private setNotice(
-    elementId: 'figma-connection-notice' | 'figma-data-notice',
+    elementId: 'figma-connection-notice' | 'figma-data-notice' | 'figma-source-data-notice',
     level: 'info' | 'success' | 'warn' | 'error',
     message: string,
   ) {
@@ -315,6 +429,10 @@ export class FigmaLayer {
 
   private setDataNotice(level: 'info' | 'success' | 'warn' | 'error', message: string) {
     this.setNotice('figma-data-notice', level, message);
+  }
+
+  private setSourceDataNotice(level: 'info' | 'success' | 'warn' | 'error', message: string) {
+    this.setNotice('figma-source-data-notice', level, message);
   }
 
   private setGuideMessage(message: string) {
@@ -389,9 +507,21 @@ export class FigmaLayer {
     return typeof state[this.stateKey] === 'string' ? (state[this.stateKey] as string) : '';
   }
 
+  private getSavedSourceDataUrl(): string {
+    const state = (vscode.getState() as Record<string, unknown> | null) ?? {};
+    return typeof state[this.sourceStateKey] === 'string'
+      ? (state[this.sourceStateKey] as string)
+      : '';
+  }
+
   private persistMcpData(value: string) {
     const state = (vscode.getState() as Record<string, unknown> | null) ?? {};
     vscode.setState({ ...state, [this.stateKey]: value });
+  }
+
+  private persistSourceDataUrl(value: string) {
+    const state = (vscode.getState() as Record<string, unknown> | null) ?? {};
+    vscode.setState({ ...state, [this.sourceStateKey]: value });
   }
 
   private createCodicon(iconName: string): HTMLElement {

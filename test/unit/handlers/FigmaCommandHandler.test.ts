@@ -15,6 +15,7 @@ suite('FigmaCommandHandler', () => {
   let remoteAuthService: RemoteFigmaAuthService;
   let screenshotService: any;
   let editorIntegration: any;
+  let sourceDataService: any;
   let stateManager: StateManager;
   let handler: FigmaCommandHandler;
   let desktopAppLauncher: sinon.SinonStub;
@@ -52,6 +53,38 @@ suite('FigmaCommandHandler', () => {
     };
     editorIntegration = {
       openInEditor: sandbox.stub().resolves(),
+      openBinaryInEditor: sandbox.stub().resolves(),
+      openBinaryAsset: sandbox.stub().resolves(),
+    };
+    sourceDataService = {
+      fetch: sandbox
+        .stub()
+        .resolves({
+          assetKey: 'http://localhost:3845/assets/test.svg',
+          url: 'http://localhost:3845/assets/test.svg',
+          contentType: 'image/svg+xml',
+          mode: 'image',
+          suggestedName: 'test.svg',
+          thumbnailDataUrl: 'data:image/svg+xml;base64,PHN2Zz48L3N2Zz4=',
+        }),
+      fetchAll: sandbox
+        .stub()
+        .resolves([
+          {
+            assetKey: 'http://localhost:3845/assets/test.svg',
+            url: 'http://localhost:3845/assets/test.svg',
+            contentType: 'image/svg+xml',
+            mode: 'image',
+            suggestedName: 'test.svg',
+            thumbnailDataUrl: 'data:image/svg+xml;base64,PHN2Zz48L3N2Zz4=',
+          },
+        ]),
+      toThumbnail: sandbox.stub().returns({
+        assetKey: 'http://localhost:3845/assets/test.svg',
+        url: 'http://localhost:3845/assets/test.svg',
+        suggestedName: 'test.svg',
+        thumbnailDataUrl: 'data:image/svg+xml;base64,PHN2Zz48L3N2Zz4=',
+      }),
     };
     desktopAppLauncher = sandbox.stub().resolves();
     stateManager = new StateManager();
@@ -66,6 +99,7 @@ suite('FigmaCommandHandler', () => {
       stateManager,
       'ko',
       desktopAppLauncher,
+      sourceDataService,
     );
     (vscode.window.showInformationMessage as sinon.SinonStub).resetHistory();
     (vscode.env.openExternal as sinon.SinonStub).resetHistory();
@@ -474,5 +508,54 @@ suite('FigmaCommandHandler', () => {
         message: sinon.match(/스크린샷을 가져오지 못했습니다/),
       }),
     );
+  });
+
+  test('fetchSourceData opens source asset through curl service and posts result', async () => {
+    await handler.fetchSourceData('http://localhost:3845/assets/test.svg');
+
+    assert.ok(sourceDataService.fetchAll.calledWith('http://localhost:3845/assets/test.svg'));
+    assert.ok(
+      webview.postMessage.calledWithMatch({
+        event: 'figma.sourceDataResult',
+        count: 1,
+        images: sinon.match.array.deepEquals([
+          {
+            assetKey: 'http://localhost:3845/assets/test.svg',
+            url: 'http://localhost:3845/assets/test.svg',
+            suggestedName: 'test.svg',
+            thumbnailDataUrl: 'data:image/svg+xml;base64,PHN2Zz48L3N2Zz4=',
+          },
+        ]),
+      }),
+    );
+  });
+
+  test('fetchSourceData requires MCP connection', async () => {
+    mcpClient.isConnected.returns(false);
+    webview.postMessage.resetHistory();
+
+    await handler.fetchSourceData('http://localhost:3845/assets/test.svg');
+
+    assert.strictEqual(webview.postMessage.firstCall.args[0].event, 'figma.sourceDataError');
+    assert.match(webview.postMessage.firstCall.args[0].message, /Source Data|MCP 서버/);
+  });
+
+  test('fetchSourceData reports source service errors', async () => {
+    sourceDataService.fetchAll.rejects(new Error('bad source url'));
+
+    await handler.fetchSourceData('http://localhost:3845/assets/missing.svg');
+
+    assert.ok(
+      webview.postMessage.calledWithMatch({
+        event: 'figma.sourceDataError',
+        message: 'bad source url',
+      }),
+    );
+  });
+
+  test('openSourceDataAsset reopens the cached binary asset', async () => {
+    await handler.openSourceDataAsset('asset-1');
+
+    assert.ok(editorIntegration.openBinaryAsset.calledWith('asset-1'));
   });
 });

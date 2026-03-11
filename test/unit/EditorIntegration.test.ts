@@ -155,6 +155,33 @@ suite('EditorIntegration', () => {
     assert.ok(vscode.window.showTextDocument.calledOnce);
   });
 
+  test('openBinaryInEditor writes a file and opens it with vscode.open', async () => {
+    const vscode = require('vscode');
+    const uri = { fsPath: '/tmp/image.svg', toString: () => 'file:///tmp/image.svg' };
+    vscode.Uri.file.returns(uri);
+    vscode.commands.executeCommand.resetHistory();
+    vscode.workspace.fs.writeFile.resetHistory();
+
+    await integration.openBinaryInEditor(new Uint8Array([1, 2, 3]), 'image.svg');
+
+    assert.ok(vscode.workspace.fs.writeFile.calledOnce);
+    assert.strictEqual(vscode.commands.executeCommand.firstCall.args[0], 'vscode.open');
+  });
+
+  test('openBinaryAsset reopens a cached binary file', async () => {
+    const vscode = require('vscode');
+    const uri = { fsPath: '/tmp/image.svg', toString: () => 'file:///tmp/image.svg' };
+    vscode.Uri.file.returns(uri);
+    vscode.commands.executeCommand.resetHistory();
+
+    await integration.openBinaryInEditor(new Uint8Array([1, 2, 3]), 'image.svg', 'asset-key');
+    vscode.commands.executeCommand.resetHistory();
+
+    await integration.openBinaryAsset('asset-key');
+
+    assert.strictEqual(vscode.commands.executeCommand.firstCall.args[0], 'vscode.open');
+  });
+
   test('saveAsNewFile calls showInformationMessage', async () => {
     const vscode = require('vscode');
     const saveDialogStub = vscode.window.showSaveDialog;

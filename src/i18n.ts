@@ -25,6 +25,12 @@ const messages: Record<UiLocale, Record<string, MessageValue>> = {
     'figma.clear': 'Clear',
     'figma.mcpPlaceholder': 'https://figma.com/file/... or JSON',
     'figma.fetchData': 'Context',
+    'figma.sourceDataTitle': 'Source Data',
+    'figma.sourceDataPlaceholder': 'http://localhost:3845/assets/...svg',
+    'figma.sourceDataHint': 'Enter an asset URL from the connected Figma MCP response.',
+    'figma.sourceDataGet': 'Get',
+    'figma.sourceDataPreviewTitle': 'Image Assets',
+    'figma.sourceDataOpenAsset': 'Open original image in editor',
     'figma.screenshot': 'Screenshot',
     'figma.metadata': 'Metadata',
     'figma.variableDefs': 'Variable Defs',
@@ -35,8 +41,13 @@ const messages: Record<UiLocale, Record<string, MessageValue>> = {
     'figma.info.loadingData': 'Loading MCP data...',
     'figma.info.loadingMetadata': 'Loading metadata...',
     'figma.info.loadingVariableDefs': 'Loading variable definitions...',
+    'figma.info.loadingSourceData': 'Downloading Source Data...',
     'figma.info.parsedInput': 'Parsed the input locally. Connect to MCP to fetch full Figma data.',
     'figma.warn.enterDataForScreenshot': 'Enter MCP data before requesting a screenshot.',
+    'figma.warn.enterSourceDataUrl': 'Enter a Source Data URL first.',
+    'figma.warn.connectBeforeSourceData': 'Source Data is available only after connecting to MCP.',
+    'figma.warn.sourceDataRemoteUnavailable':
+      'Source Data curl download is available only in local MCP mode.',
     'figma.warn.connectBeforeMetadata': 'Metadata is available only after connecting to MCP.',
     'figma.warn.connectBeforeVariableDefs':
       'Variable definitions are available only after connecting to MCP.',
@@ -54,7 +65,14 @@ const messages: Record<UiLocale, Record<string, MessageValue>> = {
     'figma.success.metadataLoaded': 'Metadata loaded.',
     'figma.success.screenshotLoaded': 'Screenshot loaded.',
     'figma.success.variableDefsLoaded': 'Variable definitions loaded.',
+    'figma.success.sourceDataTextLoaded': 'Source Data text opened in the editor.',
+    'figma.success.sourceDataImageLoaded': 'Source Data image opened in the editor.',
+    'figma.success.sourceDataBatchLoaded': ({ count }) =>
+      `${count} Source Data item${count === 1 ? '' : 's'} opened in the editor.`,
     'figma.title.fetchDisabled': 'Available after entering a Figma URL or JSON payload.',
+    'figma.title.sourceDataNeedsUrl': 'Enter a Source Data URL first.',
+    'figma.title.sourceDataNeedsConnection': 'Available after connecting to the MCP server.',
+    'figma.title.sourceDataRemoteUnavailable': 'Available only in local MCP mode.',
     'figma.title.metadataNeedsData': 'Enter a Figma URL or JSON payload first.',
     'figma.title.metadataNeedsConnection': 'Available after connecting to the MCP server.',
     'figma.title.screenshotNeedsData': 'Enter a Figma URL or JSON payload first.',
@@ -100,6 +118,15 @@ const messages: Record<UiLocale, Record<string, MessageValue>> = {
     'host.figma.fetchTimeout': 'The MCP server timed out. Try again shortly.',
     'host.figma.fetchGeneric':
       'Could not fetch Figma data. Recheck the URL/JSON input and MCP server status.',
+    'host.figma.curlUnavailable':
+      'curl is unavailable on this machine. Install curl or make it available in PATH, then retry.',
+    'host.figma.sourceDataInvalidUrl':
+      'Source Data URL is invalid. Enter a full http:// or https:// URL.',
+    'host.figma.sourceDataUrlMissing': 'Enter a Source Data URL first.',
+    'host.figma.sourceDataHttpError':
+      'Source Data download failed. Check the asset URL and the local MCP server.',
+    'host.figma.sourceDataRequiresConnection':
+      'Connect to the MCP server before requesting Source Data.',
     'host.figma.fetchRequiresConnection':
       'Connect to the MCP server before requesting metadata or variable definitions.',
     'agent.settingsTitle': 'Agent Settings',
@@ -210,6 +237,12 @@ const messages: Record<UiLocale, Record<string, MessageValue>> = {
     'figma.clear': 'Clear',
     'figma.mcpPlaceholder': 'https://figma.com/file/... 또는 JSON',
     'figma.fetchData': 'Context',
+    'figma.sourceDataTitle': 'Source Data',
+    'figma.sourceDataPlaceholder': 'http://localhost:3845/assets/...svg',
+    'figma.sourceDataHint': '연결된 Figma MCP 응답에서 받은 asset URL을 입력하세요.',
+    'figma.sourceDataGet': 'Get',
+    'figma.sourceDataPreviewTitle': 'Image Assets',
+    'figma.sourceDataOpenAsset': '원본 이미지를 Editor에서 열기',
     'figma.screenshot': '스크린샷',
     'figma.metadata': 'Metadata',
     'figma.variableDefs': 'Variable Defs',
@@ -220,9 +253,13 @@ const messages: Record<UiLocale, Record<string, MessageValue>> = {
     'figma.info.loadingData': 'MCP 데이터를 불러오는 중입니다...',
     'figma.info.loadingMetadata': '메타데이터를 불러오는 중입니다...',
     'figma.info.loadingVariableDefs': '변수 정의를 불러오는 중입니다...',
+    'figma.info.loadingSourceData': 'Source Data를 내려받는 중입니다...',
     'figma.info.parsedInput':
       '입력값만 로컬에서 파싱했습니다. 전체 Figma 데이터는 MCP에 연결한 뒤 가져오세요.',
     'figma.warn.enterDataForScreenshot': '스크린샷을 위해 MCP 데이터를 먼저 입력하세요.',
+    'figma.warn.enterSourceDataUrl': 'Source Data URL을 먼저 입력하세요.',
+    'figma.warn.connectBeforeSourceData': 'Source Data는 MCP 연결 후에만 가능합니다.',
+    'figma.warn.sourceDataRemoteUnavailable': 'Source Data curl 다운로드는 local MCP 모드에서만 가능합니다.',
     'figma.warn.connectBeforeMetadata': '메타데이터는 MCP 연결 후에만 가능합니다.',
     'figma.warn.connectBeforeVariableDefs': '변수 정의는 MCP 연결 후에만 가능합니다.',
     'figma.warn.connectBeforeScreenshot': '스크린샷은 MCP 연결 후에만 가능합니다.',
@@ -238,7 +275,14 @@ const messages: Record<UiLocale, Record<string, MessageValue>> = {
     'figma.success.metadataLoaded': '메타데이터를 불러왔습니다.',
     'figma.success.screenshotLoaded': '스크린샷을 가져왔습니다.',
     'figma.success.variableDefsLoaded': '변수 정의를 불러왔습니다.',
+    'figma.success.sourceDataTextLoaded': 'Source Data 텍스트를 Editor에 열었습니다.',
+    'figma.success.sourceDataImageLoaded': 'Source Data 이미지를 Editor에 열었습니다.',
+    'figma.success.sourceDataBatchLoaded': ({ count }) =>
+      `Source Data ${count}개를 Editor에 열었습니다.`,
     'figma.title.fetchDisabled': 'Figma URL 또는 JSON을 입력하면 사용할 수 있습니다.',
+    'figma.title.sourceDataNeedsUrl': 'Source Data URL을 먼저 입력하세요.',
+    'figma.title.sourceDataNeedsConnection': 'MCP 서버에 연결한 뒤 사용할 수 있습니다.',
+    'figma.title.sourceDataRemoteUnavailable': 'local MCP 모드에서만 사용할 수 있습니다.',
     'figma.title.metadataNeedsData': 'Figma URL 또는 JSON을 먼저 입력하세요.',
     'figma.title.metadataNeedsConnection': 'MCP 서버에 연결한 뒤 사용할 수 있습니다.',
     'figma.title.screenshotNeedsData': 'Figma URL 또는 JSON을 먼저 입력하세요.',
@@ -284,6 +328,15 @@ const messages: Record<UiLocale, Record<string, MessageValue>> = {
     'host.figma.fetchTimeout': 'MCP 서버 응답 시간이 초과되었습니다. 잠시 후 다시 시도하세요.',
     'host.figma.fetchGeneric':
       'Figma 데이터를 가져오지 못했습니다. 입력한 URL/JSON과 MCP 서버 상태를 확인하세요.',
+    'host.figma.curlUnavailable':
+      '이 환경에서 curl을 사용할 수 없습니다. curl 설치 또는 PATH 설정을 확인한 뒤 다시 시도하세요.',
+    'host.figma.sourceDataInvalidUrl':
+      'Source Data URL 형식이 올바르지 않습니다. 전체 http:// 또는 https:// URL을 입력하세요.',
+    'host.figma.sourceDataUrlMissing': 'Source Data URL을 먼저 입력하세요.',
+    'host.figma.sourceDataHttpError':
+      'Source Data 다운로드에 실패했습니다. asset URL과 local MCP 서버 상태를 확인하세요.',
+    'host.figma.sourceDataRequiresConnection':
+      'Source Data를 요청하기 전에 먼저 MCP 서버에 연결하세요.',
     'host.figma.fetchRequiresConnection':
       '메타데이터 또는 변수 정의를 가져오려면 먼저 MCP 서버에 연결하세요.',
     'agent.settingsTitle': '에이전트 설정',

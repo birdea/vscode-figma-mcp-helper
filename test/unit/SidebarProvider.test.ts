@@ -110,6 +110,31 @@ suite('SidebarProvider', () => {
     assert.doesNotThrow(() => disposeCallback());
   });
 
+  test('prompt provider pushes agent state updates to the webview', async () => {
+    provider = new SidebarProvider(
+      'viewId',
+      'prompt',
+      mockContext.extensionUri,
+      asExtensionContext(mockContext),
+      stateManager,
+      remoteAuthService,
+    );
+    provider.resolveWebviewView(asWebviewView(mockWebviewView), {} as never, {} as never);
+
+    stateManager.setAgent('claude');
+    stateManager.setModel('claude-3');
+    await new Promise((resolve) => setTimeout(resolve, 0));
+
+    assert.ok(
+      mockWebviewView.webview.postMessage.calledWithMatch({
+        event: 'agent.state',
+        agent: 'claude',
+        model: 'claude-3',
+        hasApiKey: true,
+      }),
+    );
+  });
+
   test('onDidReceiveMessage with null handler logs error', async () => {
     provider.resolveWebviewView(asWebviewView(mockWebviewView), {} as never, {} as never);
     // Null out handler to test the guard

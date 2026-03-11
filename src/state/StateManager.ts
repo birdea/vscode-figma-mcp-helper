@@ -4,6 +4,7 @@ export class StateManager {
   private currentAgent: AgentType = 'gemini';
   private currentModel = '';
   private agentStateInitialized = false;
+  private agentStateListeners = new Set<(state: { agent: AgentType; model: string }) => void>();
   private lastDesignContextData: unknown = null;
   private lastMetadata: unknown = null;
   private lastMcpInput = '';
@@ -17,6 +18,7 @@ export class StateManager {
     this.currentAgent = agent;
     this.currentModel = '';
     this.agentStateInitialized = true;
+    this.emitAgentState();
   }
 
   getModel(): string {
@@ -26,10 +28,20 @@ export class StateManager {
   setModel(model: string) {
     this.currentModel = model;
     this.agentStateInitialized = true;
+    this.emitAgentState();
   }
 
   hasAgentState(): boolean {
     return this.agentStateInitialized;
+  }
+
+  onAgentStateChange(callback: (state: { agent: AgentType; model: string }) => void) {
+    this.agentStateListeners.add(callback);
+    return {
+      dispose: () => {
+        this.agentStateListeners.delete(callback);
+      },
+    };
   }
 
   getLastDesignContextData(): unknown {
@@ -96,5 +108,14 @@ export class StateManager {
     this.currentAgent = 'gemini';
     this.currentModel = '';
     this.agentStateInitialized = true;
+    this.emitAgentState();
+  }
+
+  private emitAgentState() {
+    const state = {
+      agent: this.currentAgent,
+      model: this.currentModel,
+    };
+    this.agentStateListeners.forEach((callback) => callback(state));
   }
 }

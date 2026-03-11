@@ -2,7 +2,7 @@ import * as vscode from 'vscode';
 import * as crypto from 'crypto';
 import { WebviewMessageHandler } from './WebviewMessageHandler';
 import { Logger } from '../logger/Logger';
-import { DEFAULT_MCP_ENDPOINT, CONFIG_KEYS } from '../constants';
+import { DEFAULT_MCP_ENDPOINT, CONFIG_KEYS, getSecretStorageKey } from '../constants';
 import { RemoteFigmaAuthService } from '../figma/RemoteFigmaAuthService';
 import { WebviewToHostMessage } from '../types';
 import { StateManager } from '../state/StateManager';
@@ -12,6 +12,7 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
   private view?: vscode.WebviewView;
   private handler?: WebviewMessageHandler;
   private logSubscription?: vscode.Disposable;
+  private stateSubscription?: vscode.Disposable;
   private messageSubscription?: vscode.Disposable;
   private viewDisposeSubscription?: vscode.Disposable;
 
@@ -59,6 +60,14 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
       this.logSubscription = Logger.onLog(this.onLog);
       const entries = Logger.getEntries();
       entries.forEach((entry) => this.onLog?.(entry));
+    }
+
+    if (this.section === 'prompt') {
+      this.stateSubscription?.dispose();
+      this.stateSubscription = this.stateManager.onAgentStateChange(({ agent, model }) => {
+        void this.postAgentState(agent, model);
+      });
+      void this.postAgentState(this.stateManager.getAgent(), this.stateManager.getModel());
     }
 
     this.viewDisposeSubscription?.dispose();
@@ -131,6 +140,9 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
     this.logSubscription?.dispose();
     this.logSubscription = undefined;
 
+    this.stateSubscription?.dispose();
+    this.stateSubscription = undefined;
+
     this.messageSubscription?.dispose();
     this.messageSubscription = undefined;
 
@@ -144,5 +156,10 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
     if (handler) {
       await handler.dispose();
     }
+  }
+
+  private async postAgentState(agent: import('../types').AgentType, model: string) {
+    const hasApiKey = Boolean(await this.context.secrets.get(getSecretStorageKey(agent)));
+    this.postMessage({ event: 'agent.state', agent, model, hasApiKey });
   }
 }

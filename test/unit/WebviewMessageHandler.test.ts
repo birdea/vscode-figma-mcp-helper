@@ -94,6 +94,22 @@ suite('WebviewMessageHandler Comprehensive', () => {
     assert.ok(openDesktopStub.calledOnce);
   });
 
+  test('handle figma.fetchSourceData', async () => {
+    const fetchSourceDataStub = sandbox
+      .stub((handler as any).figmaHandler, 'fetchSourceData')
+      .resolves();
+    await handler.handle({ command: 'figma.fetchSourceData', url: 'http://localhost:3845/assets/test.svg' });
+    assert.ok(fetchSourceDataStub.calledWith('http://localhost:3845/assets/test.svg'));
+  });
+
+  test('handle figma.openSourceDataAsset', async () => {
+    const openSourceDataAssetStub = sandbox
+      .stub((handler as any).figmaHandler, 'openSourceDataAsset')
+      .resolves();
+    await handler.handle({ command: 'figma.openSourceDataAsset', assetKey: 'asset-1' });
+    assert.ok(openSourceDataAssetStub.calledWith('asset-1'));
+  });
+
   test('handle figma.openSettings in remote mode', async () => {
     const vscode = require('vscode');
     await handler.handle({ command: 'figma.openSettings', mode: 'remote' });

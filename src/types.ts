@@ -52,6 +52,13 @@ export interface ScreenshotAsset {
   mimeType: string;
 }
 
+export interface SourceDataThumbnail {
+  assetKey: string;
+  url: string;
+  suggestedName: string;
+  thumbnailDataUrl: string;
+}
+
 // Prompt payload
 export interface PromptPayload {
   userPrompt?: string;
@@ -83,6 +90,8 @@ export type WebviewToHostMessage =
   | { command: 'figma.openSettings'; mode?: ConnectionMode }
   | { command: 'figma.openDesktopApp' }
   | { command: 'figma.fetchData'; mcpData: string }
+  | { command: 'figma.fetchSourceData'; url: string }
+  | { command: 'figma.openSourceDataAsset'; assetKey: string }
   | { command: 'figma.fetchMetadata'; mcpData: string }
   | { command: 'figma.fetchVariableDefs'; mcpData: string }
   | { command: 'figma.clearData' }
@@ -111,6 +120,8 @@ export type HostToWebviewMessage =
   | { event: 'figma.authStarted'; mode: ConnectionMode; authUrl: string }
   | { event: 'figma.connectRequested' }
   | { event: 'figma.dataResult'; data: unknown; kind: FigmaDataResultKind }
+  | { event: 'figma.sourceDataResult'; count: number; images: SourceDataThumbnail[] }
+  | { event: 'figma.sourceDataError'; message: string }
   | { event: 'figma.dataFetchError'; message: string; fallbackData: unknown }
   | { event: 'figma.screenshotResult'; base64: string }
   | { event: 'agent.state'; agent: AgentType; model: string; hasApiKey: boolean }

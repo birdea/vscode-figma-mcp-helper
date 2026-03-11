@@ -15,6 +15,8 @@ export class EditorIntegration {
   private generatedDocumentUri: vscode.Uri | null = null;
   private generatedOutputFormat: OutputFormat | undefined;
   private generatedLanguage = 'plaintext';
+  private tempBinaryUris: vscode.Uri[] = [];
+  private binaryAssetUris = new Map<string, vscode.Uri>();
 
   constructor(context?: Pick<vscode.ExtensionContext, 'extensionUri'>) {
     const extensionPath = context?.extensionUri.fsPath ?? process.cwd();
@@ -126,8 +128,44 @@ export class EditorIntegration {
     await this.browserPreviewService.syncIfActive(resolved.code, resolved.format);
   }
 
+  async openBinaryInEditor(
+    content: Uint8Array,
+    suggestedName: string,
+    assetKey: string = suggestedName,
+  ): Promise<void> {
+    const uri = await this.ensureBinaryDocumentUri(suggestedName);
+    await vscode.workspace.fs.writeFile(uri, content);
+    if (!this.tempBinaryUris.some((item) => item.toString() === uri.toString())) {
+      this.tempBinaryUris.push(uri);
+    }
+    this.binaryAssetUris.set(assetKey, uri);
+    await vscode.commands.executeCommand('vscode.open', uri);
+    Logger.success('editor', `Binary asset opened in editor (${content.byteLength} bytes)`);
+  }
+
+  async openBinaryAsset(assetKey: string): Promise<void> {
+    const uri = this.binaryAssetUris.get(assetKey);
+    if (!uri) {
+      throw new Error('No cached source asset is available yet.');
+    }
+
+    await vscode.commands.executeCommand('vscode.open', uri);
+    Logger.success('editor', `Binary asset reopened in editor (${assetKey})`);
+  }
+
   async dispose(): Promise<void> {
     await this.browserPreviewService.dispose();
+    this.binaryAssetUris.clear();
+    const tempUris = this.tempBinaryUris.splice(0);
+    await Promise.all(
+      tempUris.map(async (uri) => {
+        try {
+          await vscode.workspace.fs.delete(uri, { useTrash: false });
+        } catch {
+          // Temp file may already be deleted by the OS or the user.
+        }
+      }),
+    );
   }
 
   private toUntitledName(suggestedName: string | undefined, language: string): string {
@@ -162,6 +200,14 @@ export class EditorIntegration {
     const filename = this.toUntitledName(suggestedName, language);
     const dir = path.join(os.tmpdir(), 'figma-mcp-helper-generated');
     await fs.promises.mkdir(dir, { recursive: true });
+    return vscode.Uri.file(path.join(dir, filename));
+  }
+
+  private async ensureBinaryDocumentUri(suggestedName: string): Promise<vscode.Uri> {
+    const dir = path.join(os.tmpdir(), 'figma-mcp-helper-generated');
+    await fs.promises.mkdir(dir, { recursive: true });
+    const filename =
+      path.basename(suggestedName).replace(/[<>:"/\\|?*\x00-\x1F]+/g, '-') || 'asset.bin';
     return vscode.Uri.file(path.join(dir, filename));
   }
 

@@ -374,6 +374,81 @@ suite('UI Components Consolidated', () => {
       assert.ok(postMessageStub.calledWithMatch({ command: 'figma.fetchData' }));
     });
 
+    test('source data button click with URL posts figma.fetchSourceData', () => {
+      layer.onStatus(true, ['get_file']);
+      const input = document.getElementById('source-data-url') as HTMLTextAreaElement;
+      input.value = 'http://localhost:3845/assets/test.svg';
+      input.dispatchEvent(new (global as any).window.Event('input'));
+
+      document.getElementById('btn-fetch-source-data')?.click();
+
+      assert.ok(
+        postMessageStub.calledWithMatch({
+          command: 'figma.fetchSourceData',
+          url: 'http://localhost:3845/assets/test.svg',
+        }),
+      );
+    });
+
+    test('source data button click without connection shows warn notice', () => {
+      const input = document.getElementById('source-data-url') as HTMLTextAreaElement;
+      input.value = 'http://localhost:3845/assets/test.svg';
+      input.dispatchEvent(new (global as any).window.Event('input'));
+
+      const button = document.getElementById('btn-fetch-source-data') as HTMLButtonElement;
+      button.disabled = false;
+      button.click();
+
+      const notice = document.getElementById('figma-source-data-notice');
+      assert.ok(notice?.textContent?.includes('MCP'));
+    });
+
+    test('source data result updates source notice', () => {
+      layer.onSourceDataResult(2, [
+        {
+          assetKey: 'asset-1',
+          url: 'http://localhost:3845/assets/test.svg',
+          suggestedName: 'test.svg',
+          thumbnailDataUrl: 'data:image/svg+xml;base64,PHN2Zz48L3N2Zz4=',
+        },
+      ]);
+      const notice = document.getElementById('figma-source-data-notice');
+      assert.ok(notice?.textContent?.includes('2'));
+    });
+
+    test('source data thumbnail click reopens the original image', () => {
+      layer.onSourceDataResult(1, [
+        {
+          assetKey: 'asset-1',
+          url: 'http://localhost:3845/assets/test.svg',
+          suggestedName: 'test.svg',
+          thumbnailDataUrl: 'data:image/svg+xml;base64,PHN2Zz48L3N2Zz4=',
+        },
+      ]);
+
+      (document.querySelector('.source-card') as HTMLButtonElement)?.click();
+
+      assert.ok(
+        postMessageStub.calledWithMatch({
+          command: 'figma.openSourceDataAsset',
+          assetKey: 'asset-1',
+        }),
+      );
+    });
+
+    test('source data button disables in remote mode', () => {
+      const input = document.getElementById('source-data-url') as HTMLTextAreaElement;
+      input.value = 'http://localhost:3845/assets/test.svg';
+      input.dispatchEvent(new (global as any).window.Event('input'));
+      layer.onStatus(true, ['get_file']);
+
+      document.getElementById('btn-mode-remote')?.click();
+
+      const button = document.getElementById('btn-fetch-source-data') as HTMLButtonElement;
+      assert.ok(button.disabled);
+      assert.ok(button.title.length > 0);
+    });
+
     test('clear button clears figma data and posts clear command', () => {
       const mcpInput = document.getElementById('mcp-data') as HTMLTextAreaElement;
       mcpInput.value = 'https://figma.com/file/ABC/test?node-id=1:2';

@@ -5,6 +5,7 @@ import { RemoteFigmaApiClient } from '../../figma/RemoteFigmaApiClient';
 import { RemoteFigmaAuthService } from '../../figma/RemoteFigmaAuthService';
 import { parseMcpData } from '../../figma/McpParser';
 import { ScreenshotService } from '../../figma/ScreenshotService';
+import { SourceDataService } from '../../figma/SourceDataService';
 import { EditorIntegration } from '../../editor/EditorIntegration';
 import { Logger } from '../../logger/Logger';
 import { ConnectionMode, FigmaDataResultKind, HostToWebviewMessage } from '../../types';
@@ -74,6 +75,10 @@ export class FigmaCommandHandler {
     private stateManager: StateManager,
     private locale: UiLocale,
     private readonly desktopAppLauncher: DesktopAppLauncher = () => launchFigmaDesktopApp(),
+    private readonly sourceDataService: SourceDataService = new SourceDataService(
+      editorIntegration,
+      locale,
+    ),
   ) {}
 
   private post(msg: HostToWebviewMessage) {
@@ -283,6 +288,55 @@ export class FigmaCommandHandler {
     this.stateManager.clearLastDesignContextData();
     this.stateManager.clearLastMetadata();
     this.stateManager.clearLastScreenshot();
+  }
+
+  async fetchSourceData(url: string) {
+    if (this.activeMode === 'remote') {
+      this.post({
+        event: 'figma.sourceDataError',
+        message: t(this.locale, 'host.figma.remoteComingSoon'),
+      });
+      return;
+    }
+
+    if (!this.mcpClient.isConnected()) {
+      this.post({
+        event: 'figma.sourceDataError',
+        message: t(this.locale, 'host.figma.sourceDataRequiresConnection'),
+      });
+      return;
+    }
+
+    try {
+      const results = await this.sourceDataService.fetchAll(url);
+      this.post({
+        event: 'figma.sourceDataResult',
+        count: results.length,
+        images: results
+          .map((result) => this.sourceDataService.toThumbnail(result))
+          .filter((item): item is NonNullable<typeof item> => item !== null),
+      });
+    } catch (e) {
+      const errMessage = toErrorMessage(e);
+      Logger.error('figma', 'Source Data request failed', errMessage);
+      this.post({
+        event: 'figma.sourceDataError',
+        message: errMessage,
+      });
+    }
+  }
+
+  async openSourceDataAsset(assetKey: string) {
+    try {
+      await this.editorIntegration.openBinaryAsset(assetKey);
+    } catch (e) {
+      const errMessage = toErrorMessage(e);
+      Logger.error('figma', 'Source Data asset reopen failed', errMessage);
+      this.post({
+        event: 'figma.sourceDataError',
+        message: errMessage,
+      });
+    }
   }
 
   private async fetchRemoteData(

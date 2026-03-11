@@ -290,11 +290,7 @@ textarea:disabled {
   gap: 1px;
   border: 1px solid color-mix(in srgb, var(--vscode-panel-border) 45%, transparent);
   border-radius: var(--figmalab-radius);
-  background: color-mix(
-    in srgb,
-    var(--vscode-panel-border) 40%,
-    transparent
-  );
+  background: color-mix(in srgb, var(--vscode-panel-border) 40%, transparent);
   overflow: hidden;
 }
 

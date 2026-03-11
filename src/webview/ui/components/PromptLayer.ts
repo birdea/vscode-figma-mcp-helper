@@ -106,18 +106,14 @@ export class PromptLayer {
         <button class="secondary hidden" id="btn-cancel-generate"><i class="codicon codicon-debug-stop"></i>${this.msg('prompt.cancel')}</button>
       </div>
       <div class="prompt-generate-status">
-        <div class="section-status prompt-inline-status" id="prompt-progress-text">${this.msg('prompt.status.ready')}</div>
-        <div
+        <progress
           class="progress-track prompt-primary-progress"
           id="prompt-progress"
-          role="progressbar"
+          max="100"
+          value="0"
           aria-label="${this.msg('prompt.progress.aria')}"
-          aria-valuemin="0"
-          aria-valuemax="100"
-          aria-valuenow="0"
-        >
-          <div class="progress-fill" id="prompt-progress-fill"></div>
-        </div>
+        ></progress>
+        <div class="section-status prompt-inline-status" id="prompt-progress-text">${this.msg('prompt.status.ready')}</div>
       </div>
     </div>
     <div class="btn-row prompt-secondary-actions">
@@ -367,16 +363,12 @@ export class PromptLayer {
   }
 
   private setProgressState(progress: number, statusText: string) {
-    const progressBar = document.getElementById('prompt-progress');
-    const progressFill = document.getElementById('prompt-progress-fill');
+    const progressBar = document.getElementById('prompt-progress') as HTMLProgressElement | null;
     const progressText = document.getElementById('prompt-progress-text');
 
     const safeProgress = Math.max(0, Math.min(100, progress));
     if (progressBar) {
-      progressBar.setAttribute('aria-valuenow', String(safeProgress));
-    }
-    if (progressFill instanceof HTMLElement) {
-      progressFill.style.width = `${safeProgress}%`;
+      progressBar.value = safeProgress;
     }
     if (progressText) {
       progressText.textContent = statusText;

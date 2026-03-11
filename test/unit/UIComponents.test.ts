@@ -471,13 +471,11 @@ suite('UI Components Consolidated', () => {
       assert.ok(postMessageStub.calledWithMatch({ command: 'agent.getState' }));
     });
 
-    test('onGenerating sets progress bar width', () => {
+    test('onGenerating updates progress bar value', () => {
       layer.onGenerating(50);
-      const bar = document.getElementById('prompt-progress');
-      const fill = document.getElementById('prompt-progress-fill') as HTMLDivElement | null;
+      const bar = document.getElementById('prompt-progress') as HTMLProgressElement | null;
       assert.ok(bar);
-      assert.strictEqual(bar?.getAttribute('aria-valuenow'), '50');
-      assert.strictEqual(fill?.style.width, '50%');
+      assert.strictEqual(bar?.value, 50);
     });
 
     test('onEstimateResult updates split metric values', () => {

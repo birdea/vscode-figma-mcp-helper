@@ -402,7 +402,7 @@
     "conventional-changelog": "^7.2.0",
     "eslint": "^10.0.3",
     "eslint-config-prettier": "^10.1.8",
-    "jsdom": "^28.1.0",
+    "jsdom": "^29.0.0",
     "mocha": "^11.7.5",
     "module-alias": "^2.3.4",
     "nock": "^14.0.11",
